@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 //! 合成 hive 构造器——**仅供单元测试使用**(`#[cfg(test)]`)。
 //!
 //! 按 REGF / hbin / nk / vk / lf 规范在内存里拼出最小合法 hive,用于:
@@ -17,6 +18,7 @@ const HBIN_START: usize = 0x20;
 pub struct KeySpec {
     pub name: String,
     pub class: Option<Vec<u8>>,
+    pub last_write: u64,
     pub values: Vec<(String, u32, Vec<u8>)>,
     pub children: Vec<KeySpec>,
 }
@@ -26,6 +28,7 @@ impl KeySpec {
         Self {
             name: name.to_string(),
             class: None,
+            last_write: 0,
             values: Vec::new(),
             children: Vec::new(),
         }
@@ -33,6 +36,11 @@ impl KeySpec {
 
     pub fn child(mut self, child: KeySpec) -> Self {
         self.children.push(child);
+        self
+    }
+
+    pub fn last_write(mut self, filetime: u64) -> Self {
+        self.last_write = filetime;
         self
     }
 
@@ -109,7 +117,7 @@ impl Builder {
             None
         } else {
             let mut data = vec![0u8; 4 + sub_offsets.len() * 4];
-            data[0..2].copy_from_slice(&0x6C66u16.to_le_bytes()); // "lf"
+            data[0..2].copy_from_slice(b"lf");
             data[2..4].copy_from_slice(&(sub_offsets.len() as u16).to_le_bytes());
             for (index, offset) in sub_offsets.iter().enumerate() {
                 data[4 + index * 4..8 + index * 4].copy_from_slice(&offset.to_le_bytes());
@@ -171,6 +179,7 @@ impl Builder {
         let mut payload = vec![0u8; 0x4C + name_bytes.len()];
         payload[0..2].copy_from_slice(&0x6B6Eu16.to_le_bytes()); // "nk"
         payload[2..4].copy_from_slice(&0x2C20u16.to_le_bytes());
+        payload[4..12].copy_from_slice(&spec.last_write.to_le_bytes());
         if let Some(list) = &sub_list {
             payload[0x14..0x18].copy_from_slice(&(sub_offsets.len() as u32).to_le_bytes());
             payload[0x1C..0x20].copy_from_slice(&(list.offset as u32).to_le_bytes());
@@ -206,17 +215,20 @@ impl Builder {
             hbins[hbin_size - 4..hbin_size].copy_from_slice(&free_len.to_le_bytes());
         }
         hbins[0..4].copy_from_slice(b"hbin");
-        // hbin 的“相对偏移”字段存放该 hbin 的绝对文件偏移(首个 hbin 为 0x1000)
-        hbins[4..8].copy_from_slice(&(0x1000u32).to_le_bytes());
+        // hbin 的“相对偏移”字段以首个 hbin 为 0（真实 hive 的首个 hbin 写 0）。
+        hbins[4..8].copy_from_slice(&0u32.to_le_bytes());
         hbins[8..0xC].copy_from_slice(&(hbin_size as u32).to_le_bytes());
         let mut file = vec![0u8; 0x1000];
         file[0..4].copy_from_slice(b"regf");
         file[4..8].copy_from_slice(&1u32.to_le_bytes());
         file[8..0xC].copy_from_slice(&1u32.to_le_bytes());
+        file[0x14..0x18].copy_from_slice(&1u32.to_le_bytes());
+        file[0x18..0x1C].copy_from_slice(&5u32.to_le_bytes());
+        file[0x1C..0x20].copy_from_slice(&0u32.to_le_bytes());
+        file[0x20..0x24].copy_from_slice(&1u32.to_le_bytes());
         file[0x24..0x28].copy_from_slice(&1u32.to_le_bytes());
-        file[0x28..0x2C].copy_from_slice(&5u32.to_le_bytes());
-        file[0x30..0x34].copy_from_slice(&1u32.to_le_bytes());
-        file[0x38..0x3C].copy_from_slice(&(hbin_size as u32).to_le_bytes());
+        file[0x28..0x2C].copy_from_slice(&(hbin_size as u32).to_le_bytes());
+        file[0x2C..0x30].copy_from_slice(&1u32.to_le_bytes());
         file.extend_from_slice(&hbins);
         file
     }
@@ -235,7 +247,7 @@ pub fn build_hive(root: &KeySpec) -> Vec<u8> {
     let mut builder = Builder::new();
     let root_offset = builder.build_key(root);
     let mut bytes = builder.finish();
-    bytes[0x34..0x38].copy_from_slice(&(root_offset as u32).to_le_bytes());
+    bytes[0x24..0x28].copy_from_slice(&(root_offset as u32).to_le_bytes());
     bytes
 }
 

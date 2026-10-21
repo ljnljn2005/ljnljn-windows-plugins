@@ -1,0 +1,350 @@
+{
+  "protocol": 2,
+  "plugin": "org.ljnljn.bitlocker-vhd",
+  "sdk": "0.2.0",
+  "analyzers": [
+    "bitlocker_vhd"
+  ],
+  "filesystems": [],
+  "records": [
+    {
+      "type": "profile.fact",
+      "label": "检材画像",
+      "title": "{key}",
+      "fields": [
+        {
+          "id": "key",
+          "label": "键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "json"
+        },
+        {
+          "id": "system",
+          "label": "系统",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "bitlocker.image",
+      "label": "BitLocker 镜像识别",
+      "title": "{file_name}",
+      "fields": [
+        {
+          "id": "file_name",
+          "label": "来源文件",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "mime",
+          "label": "MIME",
+          "kind": "text"
+        },
+        {
+          "id": "file_size",
+          "label": "文件大小",
+          "kind": "size"
+        },
+        {
+          "id": "format",
+          "label": "格式",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "vhd",
+              "label": "VHD"
+            },
+            {
+              "id": "vhdx",
+              "label": "VHDX"
+            },
+            {
+              "id": "unknown",
+              "label": "未知"
+            }
+          ]
+        },
+        {
+          "id": "format_label",
+          "label": "格式标签",
+          "kind": "text"
+        },
+        {
+          "id": "format_signature",
+          "label": "格式签名",
+          "kind": "text"
+        },
+        {
+          "id": "format_signature_offset",
+          "label": "格式签名偏移",
+          "kind": "int"
+        },
+        {
+          "id": "encrypted",
+          "label": "是否命中签名",
+          "kind": "bool"
+        },
+        {
+          "id": "encryption_evidence",
+          "label": "加密证据",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "fve_signature",
+              "label": "FVE 签名"
+            },
+            {
+              "id": "none_in_scanned_range",
+              "label": "扫描范围内未命中"
+            }
+          ]
+        },
+        {
+          "id": "signature_count",
+          "label": "签名数",
+          "kind": "int"
+        },
+        {
+          "id": "first_signature_offset",
+          "label": "首个签名偏移",
+          "kind": "int"
+        },
+        {
+          "id": "recovery_key_guid",
+          "label": "恢复密钥 GUID",
+          "kind": "text"
+        },
+        {
+          "id": "recovery_key_guids",
+          "label": "恢复密钥 GUID 列表",
+          "kind": "list"
+        },
+        {
+          "id": "scan_bytes",
+          "label": "已扫描字节",
+          "kind": "size"
+        },
+        {
+          "id": "scan_limit",
+          "label": "扫描上限",
+          "kind": "size"
+        },
+        {
+          "id": "scan_truncated",
+          "label": "扫描被上限截断",
+          "kind": "bool"
+        },
+        {
+          "id": "hit_limit_reached",
+          "label": "命中达到上限",
+          "kind": "bool"
+        },
+        {
+          "id": "vhd_footer_offset",
+          "label": "VHD footer 偏移",
+          "kind": "int"
+        },
+        {
+          "id": "vhd_disk_type",
+          "label": "VHD 磁盘类型",
+          "kind": "int"
+        },
+        {
+          "id": "vhd_disk_type_label",
+          "label": "VHD 磁盘类型标签",
+          "kind": "text"
+        },
+        {
+          "id": "vhd_current_size",
+          "label": "VHD 当前大小",
+          "kind": "size"
+        },
+        {
+          "id": "vhd_unique_id_hex",
+          "label": "VHD 唯一 ID",
+          "kind": "text"
+        },
+        {
+          "id": "vhdx_creator",
+          "label": "VHDX 创建者",
+          "kind": "text"
+        },
+        {
+          "id": "limitations",
+          "label": "限制说明",
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "type": "bitlocker.hit",
+      "label": "FVE 签名命中",
+      "title": "签名 @ {signature_offset}",
+      "fields": [
+        {
+          "id": "signature_offset",
+          "label": "签名偏移",
+          "kind": "int",
+          "key": true
+        },
+        {
+          "id": "volume_header_offset",
+          "label": "卷头偏移",
+          "kind": "int"
+        },
+        {
+          "id": "boot_entry",
+          "label": "引导入口",
+          "kind": "text"
+        },
+        {
+          "id": "parse_status",
+          "label": "解析状态",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "parsed",
+              "label": "已解析"
+            },
+            {
+              "id": "not_boot_header",
+              "label": "非引导卷头"
+            },
+            {
+              "id": "no_metadata",
+              "label": "无元数据"
+            },
+            {
+              "id": "invalid_metadata",
+              "label": "元数据损坏"
+            }
+          ]
+        },
+        {
+          "id": "parse_basis",
+          "label": "解析依据",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "boot_header",
+              "label": "启动卷头"
+            },
+            {
+              "id": "metadata_block",
+              "label": "独立元数据块"
+            },
+            {
+              "id": "none",
+              "label": "未解析"
+            }
+          ]
+        },
+        {
+          "id": "metadata_block_offset",
+          "label": "元数据块偏移",
+          "kind": "int"
+        },
+        {
+          "id": "metadata_version",
+          "label": "元数据版本",
+          "kind": "int"
+        },
+        {
+          "id": "metadata_size",
+          "label": "元数据大小",
+          "kind": "int"
+        },
+        {
+          "id": "metadata_volume_id",
+          "label": "元数据卷 ID",
+          "kind": "text"
+        },
+        {
+          "id": "encryption_method",
+          "label": "加密方法",
+          "kind": "int"
+        },
+        {
+          "id": "encryption_method_label",
+          "label": "加密方法标签",
+          "kind": "text"
+        },
+        {
+          "id": "vmk_count",
+          "label": "VMK 数",
+          "kind": "int"
+        },
+        {
+          "id": "recovery_key_guid_count",
+          "label": "恢复密钥 GUID 数",
+          "kind": "int"
+        },
+        {
+          "id": "recovery_key_guids",
+          "label": "恢复密钥 GUID 列表",
+          "kind": "list"
+        },
+        {
+          "id": "parse_error",
+          "label": "解析错误",
+          "kind": "text"
+        },
+        {
+          "id": "limitations",
+          "label": "限制说明",
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "type": "bitlocker.vmk",
+      "label": "FVE VMK 条目",
+      "title": "{vmk_guid}",
+      "fields": [
+        {
+          "id": "vmk_guid",
+          "label": "VMK GUID",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "protection_type",
+          "label": "保护类型",
+          "kind": "int"
+        },
+        {
+          "id": "protection_label",
+          "label": "保护类型标签",
+          "kind": "text"
+        },
+        {
+          "id": "is_recovery_key",
+          "label": "是否恢复密钥",
+          "kind": "bool"
+        },
+        {
+          "id": "signature_offset",
+          "label": "签名偏移",
+          "kind": "int"
+        },
+        {
+          "id": "metadata_block_offset",
+          "label": "元数据块偏移",
+          "kind": "int"
+        },
+        {
+          "id": "index",
+          "label": "条目序号",
+          "kind": "int"
+        }
+      ]
+    }
+  ],
+  "schema_hash": "fnv1a64:0cdc19adb5566e35"
+}

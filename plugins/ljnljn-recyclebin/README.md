@@ -1,44 +1,45 @@
-# ljnljn-recyclebin
+# ljnljn-recyclebin（LPP v2）
 
-LovelyCarve 原生插件（LPP v1 / C ABI v1），插件 ID `org.ljnljn.recyclebin`。
+Windows Vista+ 回收站 `$I` 元数据插件，从 LPP v1 迁移到 SDK 0.2.0 / protocol 2。
+解析逻辑沿用原插件的严格 `$I` v1/v2 解析器。
 
-解析 $I v1/v2 原始名称、路径、大小与删除时间，检材模式检查 $R 配对。
+- 插件 ID：`org.ljnljn.recyclebin`
+- 记录类型：`windows.recyclebin.entry`
+- `recyclebin_files`（`files`）：用户选中的 `$I` 文件；不限制扩展名，因为 `$I`
+  文件名保留被删除文件的扩展名。
+- `recyclebin_evidence`（`evidence`）：逐卷扫描 `$Recycle.Bin` 及一级所有者目录，
+  校验同目录 `$R` 的存在性与大小。
 
-## 分析器
+记录包含原始文件名/路径、原始大小、删除时间（UTC，`Timestamp`，时间线角色
+`deleted`）、原始 FILETIME、`$I` 版本，以及 `$R` 状态、路径、是否存在、大小和
+大小一致性。来源指向被解析的 `$I` 文件及其字节范围；损坏或不可读的 `$I`
+产生告警（`INVALID_RECYCLE_METADATA`、`RESOURCE_LIMIT` 等），不会静默返回空结果。
 
-| 类型 | analyzer | 扩展名 |
-| --- | --- | --- |
-| 单文件 | `ljnljn.recyclebin.file` | — |
-| 整份检材 | `ljnljn.recyclebin.evidence` | — |
+边界：不恢复 `$R` 内容，不解析旧式 `INFO2`，不搜索深层目录，不修改检材。
+证据范围每个卷最多 256 个所有者目录、20000 个目录项、4096 条 `$I` 候选；
+单个 `$I` 最多 65564 字节。
 
-## 覆盖范围
-
-- 回收站文件名
-- 删除时间
-- 原始大小
-- 回收站内容配对
-
-## 构建
-
-仓库内置 LovelyCarve 插件 SDK（`vendor/lovelycarve-sdk`，AGPL-3.0），无需外部路径：
+## 构建与验证
 
 ```bash
 cargo test --locked
 cargo build --release --locked
+lc-plugin-host --describe --library target/release/ljnljn_recyclebin.dll > schema.json
 ```
 
-Windows 产物为 `target/release/ljnljn_recyclebin.dll`。
+`schema.json` 由宿主 `--describe` 生成，应列出 `org.ljnljn.recyclebin`、
+`recyclebin_files`、`recyclebin_evidence` 与 `windows.recyclebin.entry`。
 
-## 安装
+## 安装布局
 
-把 `plugin.toml` 与构建出的 `ljnljn_recyclebin.dll` 放进 LovelyCarve 插件目录下的同名子目录，重启引擎后生效。插件使用 `isolation = "process"`。
-
-## 取证边界
-
-首版不恢复文件内容，不核验第三方 CSV。
-
-插件只读检材，不执行检材内容，不访问网络。已通过仓库内单元测试与 release 构建；尚未在真实 LovelyCarve GUI 与真实案件检材上完成端到端验证。
+```text
+ljnljn-recyclebin/
+├── plugin.toml
+├── ljnljn_recyclebin.dll
+├── schema.json
+└── locales/{en.toml,zh-CN.toml}
+```
 
 ## 许可证
 
-AGPL-3.0-only，见 [LICENSE](LICENSE)。内置 SDK 保留其原始许可证与协议文档。
+AGPL-3.0-only，见 [LICENSE](LICENSE)。

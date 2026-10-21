@@ -1,55 +1,92 @@
+# LPP v2 package manifest. Labels are the Chinese defaults; translations live
+# in locales/<locale>.toml under stable keys.
 id = "org.ljnljn.windows-registry"
-name = "Windows注册表取证"
+name = "Windows 注册表取证"
 version = "0.1.0"
-protocol_min = 1
-protocol_max = 1
-permissions = ["emit_artifacts"]
+protocol = 2
+library = "ljnljn_windows_registry"
+memory = "2GiB"
+permissions = []
 
-# ljnljn_kb_sam_hive_hash_extract_da5e5db1.dll built from this crate.
-# It parses untrusted hives, so it keeps the default isolation = "process".
-[library]
-path = "ljnljn_kb_sam_hive_hash_extract_da5e5db1"
-isolation = "process"
+# SAM + SYSTEM pairing. The evidence scope pairs the hives of every volume;
+# the system scope does the same on one detected Windows system.
+[[analyzer]]
+id = "sam_accounts"
+name = "SAM 账号与哈希"
+scope = "evidence"
+trigger = "manual"
+category = "hash"
+inputs = ["Windows/System32/config/SAM", "Windows/System32/config/SYSTEM"]
 
-[task]
-type = "baseinfo"
-platform = "windows"
-trigger = "manually"
-support = [
-  "注册表 hive 来源",
-  "bootkey 派生(JD/Skew1/GBG/Data)",
-  "账号与 RID",
-  "NT/LM 哈希提取",
-  "SOFTWARE 系统版本",
-  "Uninstall 安装项",
-  "SYSTEM USBSTOR 设备与实例",
-]
+[[analyzer]]
+id = "sam_accounts_system"
+name = "SAM 账号与哈希（当前系统）"
+scope = "system"
+platforms = ["windows"]
+trigger = "manual"
+category = "hash"
+inputs = ["Windows/System32/config/SAM", "Windows/System32/config/SYSTEM"]
 
-[[capabilities]]
-type = "evidence_analyzer"
-analyzer = "ljnljn.windows-registry"
-display = "SAM账号哈希提取(SAM+SYSTEM hive)"
+[[analyzer]]
+id = "software_version"
+name = "SOFTWARE 系统版本"
+scope = "system"
+platforms = ["windows"]
+trigger = "manual"
+category = "software"
+inputs = ["Windows/System32/config/SOFTWARE"]
 
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.windows-registry.software-version"
-extensions = ["hive", "dat"]
-priority = 10
+[[analyzer]]
+id = "software_version_file"
+name = "系统版本（选定 SOFTWARE hive）"
+scope = "files"
+trigger = "manual"
+category = "software"
 
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.windows-registry.uninstall"
-extensions = ["hive", "dat"]
-priority = 10
+[[analyzer]]
+id = "uninstall"
+name = "Uninstall 安装项"
+scope = "system"
+platforms = ["windows"]
+trigger = "manual"
+category = "software"
+inputs = ["Windows/System32/config/SOFTWARE"]
 
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.windows-registry.usbstor"
-extensions = ["hive", "dat"]
-priority = 10
+[[analyzer]]
+id = "uninstall_file"
+name = "Uninstall 安装项（选定 SOFTWARE hive）"
+scope = "files"
+trigger = "manual"
+category = "software"
 
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.windows-registry.sam-policy"
-extensions = ["hive", "dat"]
-priority = 10
+[[analyzer]]
+id = "usbstor"
+name = "USBSTOR 设备"
+scope = "system"
+platforms = ["windows"]
+trigger = "manual"
+category = "usb"
+inputs = ["Windows/System32/config/SYSTEM"]
+
+[[analyzer]]
+id = "usbstor_file"
+name = "USBSTOR 设备（选定 SYSTEM hive）"
+scope = "files"
+trigger = "manual"
+category = "usb"
+
+[[analyzer]]
+id = "password_policy"
+name = "SAM 密码策略"
+scope = "system"
+platforms = ["windows"]
+trigger = "manual"
+category = "policy"
+inputs = ["Windows/System32/config/SAM"]
+
+[[analyzer]]
+id = "password_policy_file"
+name = "SAM 密码策略（选定 SAM hive）"
+scope = "files"
+trigger = "manual"
+category = "policy"

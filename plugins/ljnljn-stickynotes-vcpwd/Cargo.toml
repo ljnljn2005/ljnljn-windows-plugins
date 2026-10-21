@@ -1,42 +1,28 @@
 [package]
-name = "ljnljn-stickynotes-vcpwd-extract-dc952a12"
+name = "ljnljn-stickynotes-vcpwd"
 version = "0.1.0"
 edition = "2021"
-description = "LovelyCarve file_analyzer: parse Microsoft StickyNotes exported CSV and extract VCpwd credential candidates (便笺 CSV 凭据候选提取)"
+license.workspace = true
+description = "LovelyCarve LPP v2 analyzer: VCpwd credentials in Microsoft Sticky Notes CSV exports"
 publish = false
 
 [lib]
-crate-type = ["cdylib"]
-name = "ljnljn_kb_stickynotes_vcpwd_extract_dc952a12"
+name = "ljnljn_stickynotes_vcpwd"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# 真实 SDK crate `lovelycarve-plugin`（LPP v1 / C ABI v1），来自本机已有的官方
-# 插件工作区快照 workspaces/_plugin-gen/_sdk（SDK-SOURCE.json 记录：
-# LovelyTeams/LovelyCarve-Plugins @ 68d75aebf018ac43add391f2bc83528ca2ee85ae；
-# 本机 sdk/Cargo.toml version = "0.1.0"）。该 crate 使用 license.workspace = true，
-# 因此依赖指向完整工作区内的 sdk/，由父 Cargo.toml 提供 workspace 继承；
-# SDK 只读引用，未修改。
-lovelycarve-plugin = { path = "../../sdk-v1/sdk" }
-
-# 唯一额外依赖：GBK / GB18030 严格解码与编码（Windows 代码页 936 场景）。
-# 纯表驱动、无 C 代码、无 I/O，不访问网络；CSV 解析仍在本 crate 内自实现，
-# 以便对引号规则、分隔符判定、行号与未解析行计数逐项做单元测试。
-# （0.8.35 中 encode/decode 快捷方法位于 default feature `alloc`，必须保留）
+lovelycarve-plugin = { path = "../../sdk-v2/sdk" }
 encoding_rs = "0.8"
 
-[profile.release]
-# 与官方插件工作区一致：panic 在 C ABI 边界转成 LPP 错误，需要 unwind。
-panic = "unwind"
+[dev-dependencies]
+lovelycarve-plugin = { path = "../../sdk-v2/sdk", features = ["testing"] }
 
 [lints.rust]
-# MSVC link.exe 会为每个 DLL 报告生成的导入库。
 linker_messages = "allow"
 
 [lints.clippy]
 uninlined_format_args = "warn"
 
-# 独立工作区：本工程位于插件工作区目录树下，但独立构建，
-# 不会把自身或 SDK 的成员关系带入 carve-plugins 的 Cargo.toml。
 [workspace]
 
 [workspace.package]

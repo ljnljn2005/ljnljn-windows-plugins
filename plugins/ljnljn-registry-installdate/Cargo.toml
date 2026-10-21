@@ -1,32 +1,28 @@
-# 独立的 LovelyCarve 插件工程：依赖指向任务书给定的共享官方 SDK crate（lovelycarve-plugin）。
-# SDK 位置按任务书给定的绝对路径写死，不复制 SDK、不使用相对占位路径、不下载第二份。
-# 本目录同时是 Cargo workspace 根：插件自身 + 开发期协议验证工具 tools/host-sim。
-[workspace]
-members = []
-
 [package]
-name = "ljnljn-registry-installdate-bf1bcabf"
+name = "ljnljn-registry-installdate"
 version = "0.1.0"
 edition = "2021"
-description = "LovelyCarve 离线分析器：解析 regf hive（SOFTWARE 等）的 Microsoft\\Windows NT\\CurrentVersion\\InstallDate（Unix 秒）并输出 UTC 时间"
+license = "AGPL-3.0-only"
+description = "LovelyCarve LPP v2 analyzer: Windows registry InstallDate from a regf hive"
 publish = false
 
 [lib]
-name = "ljnljn_kb_registry_installdate_bf1bcabf"
-# cdylib 供宿主加载；rlib 让 tools/host-sim 复用同一套 hive 合成器生成样例。
+name = "ljnljn_registry_installdate"
 crate-type = ["cdylib", "rlib"]
 
-# 依赖仅 SDK 本身：regf/ntreg 解析、时间换算、hive 合成样例全部自实现，
-# 避免引入无法审计的第三方解析库。
 [dependencies]
-lovelycarve-plugin = { path = "../../sdk-v1/sdk" }
+lovelycarve-plugin = { path = "../../sdk-v2/sdk" }
+
+[dev-dependencies]
+lovelycarve-plugin = { path = "../../sdk-v2/sdk", features = ["testing"] }
 
 [lints.rust]
-# MSVC link.exe 会为每个 DLL 打印它生成的导入库信息。
 linker_messages = "allow"
 
 [lints.clippy]
 uninlined_format_args = "warn"
+
+[workspace]
 
 [workspace.package]
 license = "AGPL-3.0-only"

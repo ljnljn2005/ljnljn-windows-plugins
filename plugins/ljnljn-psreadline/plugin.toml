@@ -1,27 +1,28 @@
+# LPP v2 package manifest. Labels are the Chinese defaults; translations live
+# in locales/<locale>.toml under stable keys.
 id = "org.ljnljn.psreadline"
 name = "PowerShell历史URL"
 version = "0.1.0"
-protocol_min = 1
-protocol_max = 1
-permissions = ["emit_artifacts"]
+protocol = 2
+library = "ljnljn_psreadline"
+memory = "256MiB"
+permissions = []
 
-[library]
-path = "ljnljn_psreadline"
-isolation = "process"
-
-[task]
-type = "baseinfo"
-platform = "windows"
-trigger = "manually"
-support = ["PowerShell历史URL"]
-
-[[capabilities]]
-type = "evidence_analyzer"
-analyzer = "ljnljn.psreadline.urls"
-display = "PowerShell历史URL"
-
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.psreadline.urls.file"
+# A history file selected by the user (normally ConsoleHost_history.txt).
+[[analyzer]]
+id = "psreadline_files"
+name = "PowerShell 历史 URL（单文件）"
+scope = "files"
+trigger = "manual"
+category = "powershell"
 extensions = ["txt"]
-priority = 10
+mime_types = ["text/plain"]
+
+# The whole evidence item: standard user-profile PSReadLine history paths on
+# every volume.
+[[analyzer]]
+id = "psreadline_evidence"
+name = "PowerShell 历史 URL（检材）"
+scope = "evidence"
+trigger = "manual"
+category = "powershell"

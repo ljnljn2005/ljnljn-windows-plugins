@@ -1,45 +1,44 @@
-# ljnljn-stickynotes-vcpwd
+# ljnljn-stickynotes-vcpwd（LPP v2）
 
-LovelyCarve 原生插件（LPP v1 / C ABI v1），插件 ID `org.ljnljn.stickynotes-vcpwd`。
+从 LPP v1 迁移的便笺（Sticky Notes）CSV/TSV 凭据提取插件。字符集识别、
+分隔符判定、CSV 引号规则和 `VCpwd` 抽取保持原实现。
 
-从便笺 CSV 中提取 VCpwd 凭据与上下文。
+- 插件 ID：`org.ljnljn.stickynotes-vcpwd`
+- 分析器：`stickynotes_vcpwd`（`files`，扩展名 `csv` / `tsv` / `txt`）
+- 记录类型：
+  - `stickynotes.file`：编码、分隔符、记录数、凭据值数、未解析行数、限制说明；
+  - `stickynotes.credential`：凭据值（去重）、原始单元格、行号、列名/列序号、
+    出现次数与其余出现位置、截断标记。
 
-## 分析器
+值只来自本次检材字节：`VCpwd` 键名不区分大小写，支持 `:`、`=`、`：`。
+超过 16 MiB 的文件按 v1 语义解析前 16 MiB，并同时产生 `INPUT_TRUNCATED`
+告警和限制说明；短读、无法读取的文件产生告警，不会静默返回空结果。
 
-| 类型 | analyzer | 扩展名 |
-| --- | --- | --- |
-| 单文件 | `ljnljn.stickynotes-vcpwd` | csv, tsv, txt |
+边界：不实现 VeraCrypt 解密挂载，不校验密码正确性，不统计卷内文件数量，
+不跨文件合并凭据，不把未做的事写成已做。记录不含时间戳——抽取到的便笺内容
+没有可靠时间语义。
 
-## 覆盖范围
-
-- 编码识别：UTF-8(BOM/无BOM) / UTF-16LE+BOM / UTF-16BE+BOM / GBK / GB18030 回退
-- 分隔符识别：逗号或制表符（按首逻辑记录字段数一致性判定）
-- 标准 CSV 引号规则解析（双引号转义、跨行引号字段、CRLF/LF/CR 行尾）
-- 逐行逐列键值抽取：键名 VCpwd（不区分大小写） + :/= /中文冒号
-- 按值去重并统计出现次数，记录行号/列名或列序号/原始单元格文本（200 字符截断）
-- unparsedRowCount 与 limitations 明确记录编码替换、字段数不齐、超限等降级情况
-
-## 构建
-
-仓库内置 LovelyCarve 插件 SDK（`vendor/lovelycarve-sdk`，AGPL-3.0），无需外部路径：
+## 构建与验证
 
 ```bash
 cargo test --locked
 cargo build --release --locked
+lc-plugin-host --describe --library target/release/ljnljn_stickynotes_vcpwd.dll > schema.json
 ```
 
-Windows 产物为 `target/release/ljnljn_kb_stickynotes_vcpwd_extract_dc952a12.dll`。
+`schema.json` 应列出 `org.ljnljn.stickynotes-vcpwd`、`stickynotes_vcpwd`、
+`stickynotes.file` 与 `stickynotes.credential`。
 
-## 安装
+## 安装布局
 
-把 `plugin.toml` 与构建出的 `ljnljn_kb_stickynotes_vcpwd_extract_dc952a12.dll` 放进 LovelyCarve 插件目录下的同名子目录，重启引擎后生效。插件使用 `isolation = "process"`。
-
-## 取证边界
-
-只读 CSV；不尝试解密或登录。
-
-插件只读检材，不执行检材内容，不访问网络。已通过仓库内单元测试与 release 构建；尚未在真实 LovelyCarve GUI 与真实案件检材上完成端到端验证。
+```text
+ljnljn-stickynotes-vcpwd/
+├── plugin.toml
+├── ljnljn_stickynotes_vcpwd.dll
+├── schema.json
+└── locales/{en.toml,zh-CN.toml}
+```
 
 ## 许可证
 
-AGPL-3.0-only，见 [LICENSE](LICENSE)。内置 SDK 保留其原始许可证与协议文档。
+AGPL-3.0-only，见 [LICENSE](LICENSE)。

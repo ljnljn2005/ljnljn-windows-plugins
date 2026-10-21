@@ -1,41 +1,42 @@
-# ljnljn-psreadline
+# ljnljn-psreadline（LPP v2）
 
-LovelyCarve 原生插件（LPP v1 / C ABI v1），插件 ID `org.ljnljn.psreadline`。
+从 LPP v1 迁移的 PowerShell PSReadLine 历史 URL 插件，解析器保持原实现
+（逻辑命令合并、字面 `http(s)://` 提取、UTF-8 / BOM UTF-16）。
 
-从多用户 PowerShell 历史提取字面 HTTP/HTTPS URL 与含 URL 的命令数。
+- 插件 ID：`org.ljnljn.psreadline`
+- `psreadline_files`（`files`，扩展名 `txt`）：用户选中的历史文件。
+- `psreadline_evidence`（`evidence`）：逐卷扫描标准用户目录下的
+  `AppData/Roaming/Microsoft[/Windows]/PowerShell/PSReadLine/ConsoleHost_history.txt`。
+- 记录类型：`psreadline.history`（每文件命令数/含 URL 命令数）、
+  `psreadline.command`（行号、逻辑命令、URL 列表）、`psreadline.total`
+  （检材模式的总计数）。
 
-## 分析器
+历史文件没有可靠的执行时间，因此不生成时间线字段；URL 只是字面命中，不证明
+命令执行或请求成功。超出 4 MiB、编码损坏或未完成续行会按文件产生告警
+（`RESOURCE_LIMIT`、`INVALID_HISTORY`），不会静默返回空成功。自动扫描不覆盖
+自定义 `HistorySavePath`、其他 host 的历史和已删除历史。
 
-| 类型 | analyzer | 扩展名 |
-| --- | --- | --- |
-| 整份检材 | `ljnljn.psreadline.urls` | — |
-| 单文件 | `ljnljn.psreadline.urls.file` | txt |
-
-## 覆盖范围
-
-- PowerShell历史URL
-
-## 构建
-
-仓库内置 LovelyCarve 插件 SDK（`vendor/lovelycarve-sdk`，AGPL-3.0），无需外部路径：
+## 构建与验证
 
 ```bash
 cargo test --locked
 cargo build --release --locked
+lc-plugin-host --describe --library target/release/ljnljn_psreadline.dll > schema.json
 ```
 
-Windows 产物为 `target/release/ljnljn_psreadline.dll`。
+`schema.json` 应列出 `org.ljnljn.psreadline`、`psreadline_files`、
+`psreadline_evidence` 以及三种 `psreadline.*` 记录。
 
-## 安装
+## 安装布局
 
-把 `plugin.toml` 与构建出的 `ljnljn_psreadline.dll` 放进 LovelyCarve 插件目录下的同名子目录，重启引擎后生效。插件使用 `isolation = "process"`。
-
-## 取证边界
-
-历史记录不能证明命令已执行或请求成功。
-
-插件只读检材，不执行检材内容，不访问网络。已通过仓库内单元测试与 release 构建；尚未在真实 LovelyCarve GUI 与真实案件检材上完成端到端验证。
+```text
+ljnljn-psreadline/
+├── plugin.toml
+├── ljnljn_psreadline.dll
+├── schema.json
+└── locales/{en.toml,zh-CN.toml}
+```
 
 ## 许可证
 
-AGPL-3.0-only，见 [LICENSE](LICENSE)。内置 SDK 保留其原始许可证与协议文档。
+AGPL-3.0-only，见 [LICENSE](LICENSE)。

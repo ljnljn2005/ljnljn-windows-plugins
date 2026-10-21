@@ -1,0 +1,102 @@
+{
+  "protocol": 2,
+  "plugin": "org.ljnljn.psreadline",
+  "sdk": "0.2.0",
+  "analyzers": [
+    "psreadline_files",
+    "psreadline_evidence"
+  ],
+  "filesystems": [],
+  "records": [
+    {
+      "type": "profile.fact",
+      "label": "检材画像",
+      "title": "{key}",
+      "fields": [
+        {
+          "id": "key",
+          "label": "键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "json"
+        },
+        {
+          "id": "system",
+          "label": "系统",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "psreadline.history",
+      "label": "历史文件统计",
+      "title": "{url_command_count} 条含 URL 命令",
+      "fields": [
+        {
+          "id": "source_file",
+          "label": "来源文件",
+          "kind": "text"
+        },
+        {
+          "id": "command_count",
+          "label": "命令数",
+          "kind": "int"
+        },
+        {
+          "id": "url_command_count",
+          "label": "含 URL 命令数",
+          "kind": "int"
+        }
+      ]
+    },
+    {
+      "type": "psreadline.command",
+      "label": "含 URL 的历史命令",
+      "title": "命令 {index} · 第 {line} 行",
+      "fields": [
+        {
+          "id": "index",
+          "label": "命令序号",
+          "kind": "int"
+        },
+        {
+          "id": "line",
+          "label": "起始行",
+          "kind": "int"
+        },
+        {
+          "id": "command",
+          "label": "命令",
+          "kind": "text"
+        },
+        {
+          "id": "urls",
+          "label": "URL",
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "type": "psreadline.total",
+      "label": "全部历史统计",
+      "title": "{url_command_count} 条含 URL 命令 / {file_count} 份历史",
+      "fields": [
+        {
+          "id": "file_count",
+          "label": "历史文件数",
+          "kind": "int"
+        },
+        {
+          "id": "url_command_count",
+          "label": "含 URL 命令总数",
+          "kind": "int"
+        }
+      ]
+    }
+  ],
+  "schema_hash": "fnv1a64:e2225f712e4ba9ec"
+}

@@ -1,0 +1,175 @@
+{
+  "protocol": 2,
+  "plugin": "org.ljnljn.stickynotes-vcpwd",
+  "sdk": "0.2.0",
+  "analyzers": [
+    "stickynotes_vcpwd"
+  ],
+  "filesystems": [],
+  "records": [
+    {
+      "type": "profile.fact",
+      "label": "检材画像",
+      "title": "{key}",
+      "fields": [
+        {
+          "id": "key",
+          "label": "键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "json"
+        },
+        {
+          "id": "system",
+          "label": "系统",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "stickynotes.file",
+      "label": "便笺 CSV 文件汇总",
+      "title": "{source_file}",
+      "fields": [
+        {
+          "id": "source_file",
+          "label": "来源文件",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "encoding",
+          "label": "编码",
+          "kind": "text"
+        },
+        {
+          "id": "delimiter",
+          "label": "分隔符",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "comma",
+              "label": "逗号"
+            },
+            {
+              "id": "tab",
+              "label": "制表符"
+            },
+            {
+              "id": "unknown",
+              "label": "未知"
+            }
+          ]
+        },
+        {
+          "id": "record_count",
+          "label": "记录数",
+          "kind": "int"
+        },
+        {
+          "id": "credential_count",
+          "label": "凭据值数",
+          "kind": "int"
+        },
+        {
+          "id": "unparsed_row_count",
+          "label": "未解析行数",
+          "kind": "int"
+        },
+        {
+          "id": "has_header",
+          "label": "含表头",
+          "kind": "bool"
+        },
+        {
+          "id": "source_size",
+          "label": "来源大小",
+          "kind": "size"
+        },
+        {
+          "id": "quoted_values",
+          "label": "引号包裹值数",
+          "kind": "int"
+        },
+        {
+          "id": "colon_values",
+          "label": "含冒号值数",
+          "kind": "int"
+        },
+        {
+          "id": "comma_values",
+          "label": "含逗号值数",
+          "kind": "int"
+        },
+        {
+          "id": "limitations",
+          "label": "限制说明",
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "type": "stickynotes.credential",
+      "label": "VCpwd 凭据候选",
+      "title": "VCpwd · 第 {row_index} 行",
+      "fields": [
+        {
+          "id": "value",
+          "label": "凭据值",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "raw_cell",
+          "label": "原始单元格",
+          "kind": "text"
+        },
+        {
+          "id": "row_index",
+          "label": "行号",
+          "kind": "int"
+        },
+        {
+          "id": "column",
+          "label": "列名/列序号",
+          "kind": "text"
+        },
+        {
+          "id": "truncated",
+          "label": "是否截断",
+          "kind": "bool"
+        },
+        {
+          "id": "occurrences",
+          "label": "出现次数",
+          "kind": "int"
+        },
+        {
+          "id": "occurrence_rows",
+          "label": "出现行号",
+          "kind": "list"
+        },
+        {
+          "id": "occurrence_columns",
+          "label": "出现列",
+          "kind": "list"
+        },
+        {
+          "id": "trailing_pairs",
+          "label": "值后续键值对数",
+          "kind": "int"
+        },
+        {
+          "id": "crlf_row",
+          "label": "CRLF 行",
+          "kind": "bool"
+        }
+      ]
+    }
+  ],
+  "schema_hash": "fnv1a64:8d003204194de105"
+}

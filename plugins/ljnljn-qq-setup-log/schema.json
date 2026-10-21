@@ -1,0 +1,179 @@
+{
+  "protocol": 2,
+  "plugin": "org.ljnljn.qq-setup-log",
+  "sdk": "0.2.0",
+  "analyzers": [
+    "qq_setup_log"
+  ],
+  "filesystems": [],
+  "records": [
+    {
+      "type": "profile.fact",
+      "label": "检材画像",
+      "title": "{key}",
+      "fields": [
+        {
+          "id": "key",
+          "label": "键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "json"
+        },
+        {
+          "id": "system",
+          "label": "系统",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "qqsetup.file",
+      "label": "安装日志文件",
+      "title": "{source_file}",
+      "fields": [
+        {
+          "id": "source_file",
+          "label": "来源文件",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "encoding",
+          "label": "编码",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "utf_8",
+              "label": "UTF-8"
+            },
+            {
+              "id": "gbk",
+              "label": "GBK"
+            },
+            {
+              "id": "utf_8_lossy",
+              "label": "UTF-8（替换降级）"
+            }
+          ]
+        },
+        {
+          "id": "line_count",
+          "label": "总行数",
+          "kind": "int"
+        },
+        {
+          "id": "event_count",
+          "label": "时间事件数",
+          "kind": "int"
+        },
+        {
+          "id": "unparsed_line_count",
+          "label": "无时间片段行数",
+          "kind": "int"
+        },
+        {
+          "id": "blank_line_count",
+          "label": "空行数",
+          "kind": "int"
+        },
+        {
+          "id": "limitations",
+          "label": "限制说明",
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "type": "qqsetup.event",
+      "label": "安装日志时间事件",
+      "title": "第 {line_no} 行 · {time_raw}",
+      "fields": [
+        {
+          "id": "line_no",
+          "label": "行号",
+          "kind": "int",
+          "key": true
+        },
+        {
+          "id": "char_offset",
+          "label": "字符偏移",
+          "kind": "int",
+          "key": true
+        },
+        {
+          "id": "time_raw",
+          "label": "时间原文",
+          "kind": "text"
+        },
+        {
+          "id": "month",
+          "label": "月",
+          "kind": "int"
+        },
+        {
+          "id": "day",
+          "label": "日",
+          "kind": "int"
+        },
+        {
+          "id": "hour",
+          "label": "时",
+          "kind": "int"
+        },
+        {
+          "id": "minute",
+          "label": "分",
+          "kind": "int"
+        },
+        {
+          "id": "second",
+          "label": "秒",
+          "kind": "int"
+        },
+        {
+          "id": "category",
+          "label": "分类",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "install",
+              "label": "安装"
+            },
+            {
+              "id": "complete",
+              "label": "完成"
+            },
+            {
+              "id": "launch",
+              "label": "启动"
+            },
+            {
+              "id": "other",
+              "label": "其他"
+            }
+          ]
+        },
+        {
+          "id": "category_hits",
+          "label": "命中类别",
+          "kind": "list"
+        },
+        {
+          "id": "line_text",
+          "label": "原始行",
+          "kind": "text"
+        },
+        {
+          "id": "line_chars",
+          "label": "截断前字符数",
+          "kind": "int"
+        }
+      ]
+    }
+  ],
+  "schema_hash": "fnv1a64:a2732efce13f08f0"
+}

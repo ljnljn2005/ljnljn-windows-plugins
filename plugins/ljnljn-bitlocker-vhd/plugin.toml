@@ -1,34 +1,20 @@
+# LPP v2 package manifest. Labels are the Chinese defaults; translations live
+# in locales/<locale>.toml under stable keys.
 id = "org.ljnljn.bitlocker-vhd"
 name = "BitLocker VHD/VHDX 识别"
 version = "0.1.0"
-protocol_min = 1
-protocol_max = 1
-permissions = ["emit_artifacts"]
+protocol = 2
+library = "ljnljn_bitlocker_vhd"
+memory = "512MiB"
+permissions = []
 
-# 单文件分析器：ljnljn_kb_bitlocker_vhd_8f3c2a10.dll（Windows）/
-# libljnljn_kb_bitlocker_vhd_8f3c2a10.so（Linux），与 Cargo [lib].name 一致。
-# 解析不可信检材字节，保持 isolation = "process"。
-[library]
-path = "ljnljn_kb_bitlocker_vhd_8f3c2a10"
-isolation = "process"
-
-# 手动触发：只对用户在证据树中显式选中的 VHD/VHDX（或任意镜像）运行。
-[task]
-type = "fileanalyzer"
-platform = "all"
-trigger = "manually"
-support = [
-  "VHD 文件尾 512 字节 conectix 签名识别",
-  "VHDX 文件头 vhdxfile 签名识别",
-  "全文件扫描 BitLocker 引导签名 -FVE-FS-（2D 46 56 45 2D 46 53 2D）并输出绝对偏移",
-  "只读解析 FVE 元数据块、Windows 7+ 卷头布局与 VMK 条目",
-  "从 protection type 0x0800 的 VMK 解析恢复密钥 GUID；无法解析时写入 limitations，不猜测",
-]
-
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.bitlocker-vhd.file"
-display = "识别 BitLocker 加密的 VHD/VHDX 并解析恢复密钥 GUID"
-# 扩展名只是宿主候选提示；手动对任意文件也能调用。
+# A VHD/VHDX image (or any disk image) selected by the user. The extension
+# list is a candidate hint; the analyzer still inspects the bytes.
+[[analyzer]]
+id = "bitlocker_vhd"
+name = "BitLocker VHD/VHDX 识别"
+scope = "files"
+trigger = "manual"
+category = "bitlocker"
 extensions = ["vhd", "vhdx"]
-priority = 10
+mime_types = ["application/x-vhd", "application/x-vhdx", "application/octet-stream"]

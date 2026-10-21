@@ -211,7 +211,10 @@ fn is_pair_at(text: &str, index: usize) -> bool {
     let ascii_key = head
         .bytes()
         .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
-        && head.bytes().next().is_some_and(|byte| byte.is_ascii_alphabetic());
+        && head
+            .bytes()
+            .next()
+            .is_some_and(|byte| byte.is_ascii_alphabetic());
     let chinese_key = !ascii_key
         && head
             .chars()
@@ -272,6 +275,7 @@ fn trailing_pairs(segment: &str) -> usize {
 
 /// 统计一段文本里 VCpwd 键值对的个数。
 #[cfg(test)]
+#[allow(dead_code)] // Kept from the v1 parser; the v2 harness exercises extraction directly.
 fn count_pairs(text: &str) -> usize {
     let mut count = 0;
     let mut cursor = 0;
@@ -382,7 +386,8 @@ pub fn analyze_bytes(source_file: &str, bytes: &[u8]) -> FileReport {
     }
 
     if decoded.text.is_empty() {
-        limitations.push("文件为空（0 字节或只有 BOM）：recordCount=0、credentialCount=0".to_owned());
+        limitations
+            .push("文件为空（0 字节或只有 BOM）：recordCount=0、credentialCount=0".to_owned());
         limitations.push(csv::parse("").delimiter_basis);
         limitations.extend(static_limitations());
         report.limitations = limitations;
@@ -403,13 +408,20 @@ pub fn analyze_bytes(source_file: &str, bytes: &[u8]) -> FileReport {
             preview_list(&parsed.structural_errors)
         ));
     }
-    let width = parsed.records.first().map_or(0, |record| record.fields.len());
+    let width = parsed
+        .records
+        .first()
+        .map_or(0, |record| record.fields.len());
     if !report.has_header && !parsed.records.is_empty() {
-        limitations.push("无表头：首条记录按数据处理，columnNameOrIndex 输出 0 起的列序号".to_owned());
+        limitations
+            .push("无表头：首条记录按数据处理，columnNameOrIndex 输出 0 起的列序号".to_owned());
     }
 
     let header_cells: Option<&[String]> = if report.has_header {
-        parsed.records.first().map(|record| record.fields.as_slice())
+        parsed
+            .records
+            .first()
+            .map(|record| record.fields.as_slice())
     } else {
         None
     };
@@ -498,7 +510,8 @@ pub fn analyze_bytes(source_file: &str, bytes: &[u8]) -> FileReport {
         ));
     }
     if credentials.iter().any(|item| item.crlf_row) {
-        limitations.push("部分首次出现使用 CRLF 行尾；已统一按 CRLF/LF/CR 解析，行号不受影响".to_owned());
+        limitations
+            .push("部分首次出现使用 CRLF 行尾；已统一按 CRLF/LF/CR 解析，行号不受影响".to_owned());
     }
     let bare = bare_key_cells(header_cells);
     if bare > 0 {
@@ -507,7 +520,8 @@ pub fn analyze_bytes(source_file: &str, bytes: &[u8]) -> FileReport {
         ));
     }
     if credentials.is_empty() && !limitations.iter().any(|item| item.contains("无表头")) {
-        limitations.push("未发现符合 VCpwd:值 形式的单元格：credentialCount=0（不是解析失败）".to_owned());
+        limitations
+            .push("未发现符合 VCpwd:值 形式的单元格：credentialCount=0（不是解析失败）".to_owned());
     }
     limitations.extend(static_limitations());
     report.unparsed_row_count = unparsed;
@@ -580,7 +594,10 @@ mod tests {
         );
         // CSV 解析阶段已按 RFC 4180 去掉外层引号并还原 ""，值本身不再带引号；
         // 保留冒号提示即可，不再声称“值被引号包裹”。
-        assert!(report.limitations.iter().any(|item| item.contains("值内部含冒号")));
+        assert!(report
+            .limitations
+            .iter()
+            .any(|item| item.contains("值内部含冒号")));
     }
 
     #[test]
@@ -619,7 +636,10 @@ mod tests {
         assert_eq!(empty.record_count, 0);
         assert_eq!(empty.credential_count, 0);
         assert_eq!(empty.unparsed_row_count, 0);
-        assert!(empty.limitations.iter().any(|item| item.contains("文件为空")));
+        assert!(empty
+            .limitations
+            .iter()
+            .any(|item| item.contains("文件为空")));
 
         let bom_only = analyze_bytes("data.csv", b"\xEF\xBB\xBF");
         assert_eq!(bom_only.record_count, 0);
@@ -632,7 +652,10 @@ mod tests {
         assert_eq!(report.credential_count, 0);
         assert_eq!(report.record_count, 3);
         assert_eq!(report.unparsed_row_count, 0);
-        assert!(report.limitations.iter().any(|item| item.contains("未发现符合")));
+        assert!(report
+            .limitations
+            .iter()
+            .any(|item| item.contains("未发现符合")));
     }
 
     #[test]
@@ -664,7 +687,10 @@ mod tests {
         let mut zip = b"PK\x03\x04".to_vec();
         zip.extend_from_slice(b"VCpwd: inside-zip\n");
         let report = analyze_bytes("data.csv", &zip);
-        assert!(report.limitations.iter().any(|item| item.contains("二进制容器")));
+        assert!(report
+            .limitations
+            .iter()
+            .any(|item| item.contains("二进制容器")));
     }
 
     #[test]

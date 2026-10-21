@@ -1,33 +1,33 @@
+# LPP v2 package manifest. Labels are the Chinese defaults; translations live
+# in locales/<locale>.toml under stable keys.
 id = "org.ljnljn.registry-installdate"
 name = "注册表 InstallDate 安装时间"
 version = "0.1.0"
-protocol_min = 1
-protocol_max = 1
-permissions = ["emit_artifacts"]
+protocol = 2
+library = "ljnljn_registry_installdate"
+memory = "2GiB"
+permissions = []
 
-[library]
-path = "ljnljn_kb_registry_installdate_bf1bcabf"
-isolation = "process"
+[[analyzer]]
+id = "installdate"
+name = "SOFTWARE 安装时间"
+scope = "system"
+platforms = ["windows"]
+trigger = "manual"
+category = "system"
+inputs = ["Windows/System32/config/SOFTWARE"]
 
-[task]
-type = "baseinfo"
-platform = "all"
-trigger = "manually"
-support = [
-  "regf 头部校验（版本 / 根键偏移 / hive bins 长度 / 校验和）",
-  "Microsoft\\Windows NT\\CurrentVersion 路径查找（键名大小写不敏感）",
-  "InstallDate 原值类型与原值（REG_DWORD / 十进制 REG_SZ）",
-  "Unix 秒 → UTC ISO8601 换算（不推断本地时区）",
-  "ProductName / CurrentBuild / CurrentVersion 等辅助值（存在才输出）",
-  "解析告警、覆盖范围与限制说明",
-]
+[[analyzer]]
+id = "installdate_evidence"
+name = "安装时间（全部卷的 SOFTWARE）"
+scope = "evidence"
+trigger = "manual"
+category = "system"
+inputs = ["Windows/System32/config/SOFTWARE"]
 
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.registry-installdate.file"
-display = "注册表 InstallDate（单文件 hive）"
-
-[[capabilities]]
-type = "evidence_analyzer"
-analyzer = "ljnljn.registry-installdate.evidence"
-display = "注册表 InstallDate（整块检材内的 SOFTWARE hive）"
+[[analyzer]]
+id = "installdate_file"
+name = "安装时间（选定 hive）"
+scope = "files"
+trigger = "manual"
+category = "system"

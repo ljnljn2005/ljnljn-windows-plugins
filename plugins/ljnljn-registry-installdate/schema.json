@@ -1,0 +1,385 @@
+{
+  "protocol": 2,
+  "plugin": "org.ljnljn.registry-installdate",
+  "sdk": "0.2.0",
+  "analyzers": [
+    "installdate",
+    "installdate_evidence",
+    "installdate_file"
+  ],
+  "filesystems": [],
+  "records": [
+    {
+      "type": "profile.fact",
+      "label": "检材画像",
+      "title": "{key}",
+      "fields": [
+        {
+          "id": "key",
+          "label": "键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "json"
+        },
+        {
+          "id": "system",
+          "label": "系统",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "windows.installdate.hive",
+      "label": "InstallDate hive 校验",
+      "title": "{file_name}",
+      "fields": [
+        {
+          "id": "source_path",
+          "label": "来源路径",
+          "kind": "path",
+          "key": true
+        },
+        {
+          "id": "file_name",
+          "label": "文件名",
+          "kind": "text"
+        },
+        {
+          "id": "file_size",
+          "label": "文件大小",
+          "kind": "size"
+        },
+        {
+          "id": "version",
+          "label": "regf 版本",
+          "kind": "text"
+        },
+        {
+          "id": "regf_valid",
+          "label": "regf 校验",
+          "kind": "bool"
+        },
+        {
+          "id": "magic_ok",
+          "label": "魔数通过",
+          "kind": "bool"
+        },
+        {
+          "id": "root_cell_offset",
+          "label": "根键偏移",
+          "kind": "int"
+        },
+        {
+          "id": "hbins_size",
+          "label": "hbin 区域长度",
+          "kind": "size"
+        },
+        {
+          "id": "checksum",
+          "label": "校验和",
+          "kind": "text"
+        },
+        {
+          "id": "checksum_state",
+          "label": "校验和状态",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "match",
+              "label": "一致"
+            },
+            {
+              "id": "mismatch",
+              "label": "不一致"
+            },
+            {
+              "id": "placeholder_zero",
+              "label": "占位 0"
+            },
+            {
+              "id": "not_checked",
+              "label": "未检查"
+            }
+          ]
+        },
+        {
+          "id": "sequence",
+          "label": "序列号",
+          "kind": "text"
+        },
+        {
+          "id": "file_type",
+          "label": "文件类型",
+          "kind": "int"
+        },
+        {
+          "id": "file_format",
+          "label": "文件格式",
+          "kind": "int"
+        },
+        {
+          "id": "header_last_write",
+          "label": "头部最后写入",
+          "kind": "timestamp",
+          "timeline": "modified"
+        },
+        {
+          "id": "error_code",
+          "label": "错误码",
+          "kind": "text"
+        },
+        {
+          "id": "error_detail",
+          "label": "错误说明",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "windows.installdate.key",
+      "label": "InstallDate 目标键",
+      "title": "{target}",
+      "fields": [
+        {
+          "id": "target",
+          "label": "目标键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "exists",
+          "label": "键存在",
+          "kind": "bool"
+        },
+        {
+          "id": "resolved_path",
+          "label": "实际路径",
+          "kind": "text"
+        },
+        {
+          "id": "missing_segment",
+          "label": "缺失路径段",
+          "kind": "text"
+        },
+        {
+          "id": "cell_offset",
+          "label": "键 cell 偏移",
+          "kind": "int"
+        },
+        {
+          "id": "file_offset",
+          "label": "键文件偏移",
+          "kind": "int"
+        },
+        {
+          "id": "last_write",
+          "label": "键最后写入",
+          "kind": "timestamp",
+          "timeline": "modified"
+        },
+        {
+          "id": "value_count",
+          "label": "值数量",
+          "kind": "int"
+        },
+        {
+          "id": "value_names",
+          "label": "值名",
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "type": "windows.installdate.value",
+      "label": "InstallDate 值",
+      "title": "{hive}",
+      "fields": [
+        {
+          "id": "hive",
+          "label": "来源路径",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "state",
+          "label": "状态",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "parsed",
+              "label": "已解析"
+            },
+            {
+              "id": "missing",
+              "label": "缺失"
+            },
+            {
+              "id": "unusable",
+              "label": "不可用"
+            }
+          ]
+        },
+        {
+          "id": "raw_type",
+          "label": "原值类型",
+          "kind": "text"
+        },
+        {
+          "id": "raw_type_code",
+          "label": "原值类型代码",
+          "kind": "int"
+        },
+        {
+          "id": "raw_value",
+          "label": "原值",
+          "kind": "int"
+        },
+        {
+          "id": "raw_hex",
+          "label": "原始字节",
+          "kind": "text"
+        },
+        {
+          "id": "value_name",
+          "label": "值名",
+          "kind": "text"
+        },
+        {
+          "id": "hex",
+          "label": "十六进制原值",
+          "kind": "text"
+        },
+        {
+          "id": "utc",
+          "label": "UTC 时间",
+          "kind": "timestamp",
+          "timeline": "created"
+        },
+        {
+          "id": "raw_display",
+          "label": "原样表示",
+          "kind": "text"
+        },
+        {
+          "id": "plausibility",
+          "label": "可信度",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "zero",
+              "label": "0"
+            },
+            {
+              "id": "plausible",
+              "label": "合理"
+            },
+            {
+              "id": "implausible",
+              "label": "可疑"
+            },
+            {
+              "id": "unrepresentable",
+              "label": "超出可表示范围"
+            },
+            {
+              "id": "unsupported",
+              "label": "类型不支持"
+            }
+          ]
+        },
+        {
+          "id": "vk_cell",
+          "label": "值节点 cell 偏移",
+          "kind": "int"
+        },
+        {
+          "id": "vk_file_offset",
+          "label": "值节点文件偏移",
+          "kind": "int"
+        },
+        {
+          "id": "data_cell",
+          "label": "数据 cell 偏移",
+          "kind": "int"
+        },
+        {
+          "id": "inline",
+          "label": "数据内联",
+          "kind": "bool"
+        },
+        {
+          "id": "big_data",
+          "label": "大值分段",
+          "kind": "bool"
+        },
+        {
+          "id": "text_hex_notation",
+          "label": "字符串十六进制写法",
+          "kind": "bool"
+        },
+        {
+          "id": "detail",
+          "label": "判定说明",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "windows.installdate.aux",
+      "label": "CurrentVersion 辅助值",
+      "title": "{name}",
+      "fields": [
+        {
+          "id": "hive",
+          "label": "来源路径",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "name",
+          "label": "值名",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value_type",
+          "label": "值类型",
+          "kind": "text"
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "text"
+        },
+        {
+          "id": "vk_cell",
+          "label": "值节点 cell 偏移",
+          "kind": "int"
+        }
+      ]
+    },
+    {
+      "type": "windows.installdate.limitation",
+      "label": "解析范围与限制",
+      "title": "{subject}",
+      "fields": [
+        {
+          "id": "subject",
+          "label": "主题",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "items",
+          "label": "条目",
+          "kind": "list"
+        }
+      ]
+    }
+  ],
+  "schema_hash": "fnv1a64:d56bdd1e867186ee"
+}

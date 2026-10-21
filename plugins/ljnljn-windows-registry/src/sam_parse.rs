@@ -594,7 +594,14 @@ pub fn domain_sid(hive: &Hive) -> Option<Sid> {
 }
 
 /// 遍历 `Users` 下所有 8 位十六进制子键并提取。
-pub fn extract_accounts(hive: &Hive, keys: &HashKeys) -> RegfResult<Vec<AccountRecord>> {
+///
+/// 无法解析的用户键不会中断整个 hive：失败原因写入 `notes`，由调用方
+/// 变成运行告警或限制说明。
+pub fn extract_accounts(
+    hive: &Hive,
+    keys: &HashKeys,
+    notes: &mut Vec<String>,
+) -> RegfResult<Vec<AccountRecord>> {
     // 真实 SAM hive 常见 根 SAM -> 子 SAM -> Domains；部分合成/导出
     // hive 只有 根 SAM -> Domains。两种布局都接受。
     let users_cell = hive
@@ -614,7 +621,7 @@ pub fn extract_accounts(hive: &Hive, keys: &HashKeys) -> RegfResult<Vec<AccountR
                     .and_then(|domain| compose_sid(domain, record.rid));
                 records.push(record)
             }
-            Err(reason) => crate::logger::warn(&format!("用户键 {name} 提取失败: {reason}")),
+            Err(reason) => notes.push(format!("用户键 {name} 提取失败: {reason}")),
         }
     }
     records.sort_by_key(|record| record.rid);
@@ -636,7 +643,7 @@ pub fn extract(system: &Hive, sam: &Hive) -> Result<Extraction, String> {
     let (fake, mut limitations) = try_fake_boot_key(sam);
     let keys = hash_keys(&bootkey.key, fake);
     limitations.extend(keys.notes.clone());
-    let accounts = extract_accounts(sam, &keys)
+    let accounts = extract_accounts(sam, &keys, &mut limitations)
         .map_err(|error| format!("账号提取失败({})", error.describe()))?;
     Ok(Extraction {
         bootkey,

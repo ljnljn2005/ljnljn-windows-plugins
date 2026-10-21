@@ -1,0 +1,122 @@
+{
+  "protocol": 2,
+  "plugin": "org.ljnljn.recyclebin",
+  "sdk": "0.2.0",
+  "analyzers": [
+    "recyclebin_files",
+    "recyclebin_evidence"
+  ],
+  "filesystems": [],
+  "records": [
+    {
+      "type": "profile.fact",
+      "label": "检材画像",
+      "title": "{key}",
+      "fields": [
+        {
+          "id": "key",
+          "label": "键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "json"
+        },
+        {
+          "id": "system",
+          "label": "系统",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "windows.recyclebin.entry",
+      "label": "回收站记录",
+      "title": "{original_name}",
+      "fields": [
+        {
+          "id": "original_path",
+          "label": "原始路径",
+          "kind": "path",
+          "key": true
+        },
+        {
+          "id": "original_name",
+          "label": "原始文件名",
+          "kind": "text"
+        },
+        {
+          "id": "original_size",
+          "label": "原始大小",
+          "kind": "size"
+        },
+        {
+          "id": "deleted_at",
+          "label": "删除时间（UTC）",
+          "kind": "timestamp",
+          "timeline": "deleted"
+        },
+        {
+          "id": "deleted_filetime",
+          "label": "删除时间（FILETIME）",
+          "kind": "int"
+        },
+        {
+          "id": "version",
+          "label": "$I 版本",
+          "kind": "int"
+        },
+        {
+          "id": "companion_state",
+          "label": "$R 状态",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "not_checked_file_scope",
+              "label": "未检查（单文件）"
+            },
+            {
+              "id": "present_file",
+              "label": "文件仍存在"
+            },
+            {
+              "id": "present_directory",
+              "label": "目录仍存在"
+            },
+            {
+              "id": "missing",
+              "label": "$R 缺失"
+            },
+            {
+              "id": "unknown",
+              "label": "无法确定"
+            }
+          ]
+        },
+        {
+          "id": "companion_path",
+          "label": "$R 路径",
+          "kind": "path"
+        },
+        {
+          "id": "companion_present",
+          "label": "$R 是否存在",
+          "kind": "bool"
+        },
+        {
+          "id": "companion_size",
+          "label": "$R 大小",
+          "kind": "size"
+        },
+        {
+          "id": "size_matches",
+          "label": "大小一致",
+          "kind": "bool"
+        }
+      ]
+    }
+  ],
+  "schema_hash": "fnv1a64:4fe36ec92a996fd3"
+}

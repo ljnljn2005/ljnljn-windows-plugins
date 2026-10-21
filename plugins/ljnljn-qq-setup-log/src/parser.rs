@@ -53,7 +53,8 @@ pub const SECOND_RANGE: (u32, u32) = (0, 59);
 
 /// 行分类优先级：同一行命中多类时取最靠前者，并把全部命中类别记入
 /// `qqsetup.category_hits`。
-pub const CATEGORY_PRECEDENCE: [Category; 3] = [Category::Complete, Category::Launch, Category::Install];
+pub const CATEGORY_PRECEDENCE: [Category; 3] =
+    [Category::Complete, Category::Launch, Category::Install];
 
 /// 每类关键字（全部按大小写不敏感比较）。
 pub const INSTALL_KEYWORDS: [&str; 4] = ["setup", "install", "开始安装", "正在安装"];
@@ -93,6 +94,7 @@ pub enum DecodePath {
 
 impl DecodePath {
     /// 输出字段 `encoding` 的取值。
+    #[allow(dead_code)] // The v2 record uses enum choice ids; kept from the v1 parser.
     pub fn encoding_label(self) -> &'static str {
         match self {
             Self::Utf8 => "utf-8",
@@ -129,7 +131,8 @@ pub fn decode(bytes: &[u8]) -> Decoded {
         let text = text.strip_prefix('\u{feff}').unwrap_or(text);
         let mut limitations = Vec::new();
         if had_bom {
-            limitations.push("输入以 UTF-8 BOM（EF BB BF）开头，已剥离 BOM 后按 UTF-8 解码".to_string());
+            limitations
+                .push("输入以 UTF-8 BOM（EF BB BF）开头，已剥离 BOM 后按 UTF-8 解码".to_string());
         }
         return Decoded {
             text: text.to_string(),
@@ -173,7 +176,8 @@ pub fn decode(bytes: &[u8]) -> Decoded {
         "文件既不是合法 UTF-8 也不是合法 GBK，已按 UTF-8 替换字符（U+FFFD）降级解码：{replacement_chars} 个替换字符、{garbled_runs} 段连续损坏，相关行的原文不可完整恢复"
     )];
     if had_bom {
-        limitations.push("输入以 UTF-8 BOM 开头但正文不是合法 UTF-8，已剥离 BOM 后降级解码".to_string());
+        limitations
+            .push("输入以 UTF-8 BOM 开头但正文不是合法 UTF-8，已剥离 BOM 后降级解码".to_string());
     }
     Decoded {
         text: lossy,
@@ -220,7 +224,11 @@ pub fn split_lines(text: &str) -> Vec<&str> {
             }
             b'\r' => {
                 lines.push(&text[start..index]);
-                index += if bytes.get(index + 1) == Some(&b'\n') { 2 } else { 1 };
+                index += if bytes.get(index + 1) == Some(&b'\n') {
+                    2
+                } else {
+                    1
+                };
                 start = index;
             }
             _ => index += 1,
@@ -339,7 +347,9 @@ pub fn find_times(line: &str) -> Vec<TimeHit> {
                 MONTH_RANGE.0, MONTH_RANGE.1, DAY_RANGE.0, DAY_RANGE.1
             ));
         }
-        if !in_range(hour, HOUR_RANGE) || !in_range(minute, MINUTE_RANGE) || !in_range(second, SECOND_RANGE)
+        if !in_range(hour, HOUR_RANGE)
+            || !in_range(minute, MINUTE_RANGE)
+            || !in_range(second, SECOND_RANGE)
         {
             issues.push(format!(
                 "时分秒 {raw} 越界（hour 应 ≤{}、minute/second 应 ≤{}）",
@@ -531,7 +541,10 @@ pub fn parse_timeline(decoded: &Decoded, source_ref: &str) -> Timeline {
                 bounds_hits += 1;
                 push_note(
                     &mut notes,
-                    format!("{source_ref}#L{line_no} 时间片段 {} 越界：{issue}；原值保留未丢弃", hit.time_raw),
+                    format!(
+                        "{source_ref}#L{line_no} 时间片段 {} 越界：{issue}；原值保留未丢弃",
+                        hit.time_raw
+                    ),
                 );
             }
             events.push(Event {
@@ -558,7 +571,10 @@ pub fn parse_timeline(decoded: &Decoded, source_ref: &str) -> Timeline {
         );
     }
     if lines.is_empty() {
-        push_note(&mut notes, "输入为空（0 字节），返回 0 事件，不报错".to_string());
+        push_note(
+            &mut notes,
+            "输入为空（0 字节），返回 0 事件，不报错".to_string(),
+        );
     }
     push_note(
         &mut notes,
@@ -648,10 +664,7 @@ mod tests {
         assert_eq!(b.encoding, DecodePath::Utf8);
         assert_eq!(a.events, b.events);
         assert_eq!(a.line_count, 1);
-        assert!(b
-            .limitations
-            .iter()
-            .any(|note| note.contains("UTF-8 BOM")));
+        assert!(b.limitations.iter().any(|note| note.contains("UTF-8 BOM")));
     }
 
     #[test]
@@ -670,8 +683,14 @@ mod tests {
         assert_eq!(timeline.encoding, DecodePath::Gbk);
         assert_eq!(timeline.events.len(), 2);
         assert_eq!(timeline.events[0].category, Category::Install);
-        assert_eq!(timeline.events[1].line_text, "0831/180708 安装完成 Show QQ Window");
-        assert_eq!(timeline.events[1].category_hits, vec![Category::Complete, Category::Launch]);
+        assert_eq!(
+            timeline.events[1].line_text,
+            "0831/180708 安装完成 Show QQ Window"
+        );
+        assert_eq!(
+            timeline.events[1].category_hits,
+            vec![Category::Complete, Category::Launch]
+        );
         assert!(timeline
             .limitations
             .iter()
@@ -806,15 +825,30 @@ mod tests {
 
     #[test]
     fn classification_is_case_insensitive_and_chinese_aware() {
-        assert_eq!(primary_category(&classify("SETUP begin")), Category::Install);
-        assert_eq!(primary_category(&classify("InStAlL files")), Category::Install);
+        assert_eq!(
+            primary_category(&classify("SETUP begin")),
+            Category::Install
+        );
+        assert_eq!(
+            primary_category(&classify("InStAlL files")),
+            Category::Install
+        );
         assert_eq!(primary_category(&classify("开始安装")), Category::Install);
-        assert_eq!(primary_category(&classify("正在安装组件")), Category::Install);
+        assert_eq!(
+            primary_category(&classify("正在安装组件")),
+            Category::Install
+        );
         assert_eq!(primary_category(&classify("COMPLETE")), Category::Complete);
         assert_eq!(primary_category(&classify("Success!")), Category::Complete);
         assert_eq!(primary_category(&classify("安装完成")), Category::Complete);
-        assert_eq!(primary_category(&classify("SHOW QQ WINDOW")), Category::Launch);
-        assert_eq!(primary_category(&classify("show qq window")), Category::Launch);
+        assert_eq!(
+            primary_category(&classify("SHOW QQ WINDOW")),
+            Category::Launch
+        );
+        assert_eq!(
+            primary_category(&classify("show qq window")),
+            Category::Launch
+        );
         assert_eq!(primary_category(&classify("启动 QQ")), Category::Launch);
         assert_eq!(primary_category(&classify("LAUNCH")), Category::Launch);
         assert_eq!(primary_category(&classify("nothing here")), Category::Other);
@@ -850,7 +884,10 @@ mod tests {
         assert!(contains_ignore_case("SETUP", "setup"));
         assert!(contains_ignore_case("SeTuP", "setup"));
         // 全角输入不折叠为 ASCII，不做 NFKC 归一化（只做大小写折叠）。
-        assert!(!contains_ignore_case("ＳＨＯＷ ＱＱ ＷＩＮＤＯＷ", "show qq window"));
+        assert!(!contains_ignore_case(
+            "ＳＨＯＷ ＱＱ ＷＩＮＤＯＷ",
+            "show qq window"
+        ));
         // 逐字符折叠：İ 折叠为 i + U+0307，因此 `İnstall` 里没有连续的 `install`。
         assert!(!contains_ignore_case("İNSTALL", "install"));
         assert!(!contains_ignore_case("İnstall", "install"));

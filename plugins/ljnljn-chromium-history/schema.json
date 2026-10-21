@@ -1,0 +1,526 @@
+{
+  "protocol": 2,
+  "plugin": "org.ljnljn.chromium-history",
+  "sdk": "0.2.0",
+  "analyzers": [
+    "history",
+    "history_evidence",
+    "history_file"
+  ],
+  "filesystems": [],
+  "records": [
+    {
+      "type": "profile.fact",
+      "label": "检材画像",
+      "title": "{key}",
+      "fields": [
+        {
+          "id": "key",
+          "label": "键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "json"
+        },
+        {
+          "id": "system",
+          "label": "系统",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "browser.profile",
+      "label": "浏览器配置",
+      "title": "{browser} / {profile}",
+      "fields": [
+        {
+          "id": "browser",
+          "label": "浏览器",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "profile",
+          "label": "配置",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "path",
+          "label": "数据库路径",
+          "kind": "path"
+        },
+        {
+          "id": "status",
+          "label": "状态",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "parsed",
+              "label": "已解析"
+            },
+            {
+              "id": "failed",
+              "label": "解析失败"
+            }
+          ]
+        },
+        {
+          "id": "url_rows",
+          "label": "URL 行数",
+          "kind": "int"
+        },
+        {
+          "id": "visits",
+          "label": "访问次数",
+          "kind": "int"
+        },
+        {
+          "id": "orphan_visits",
+          "label": "孤立访问行",
+          "kind": "int"
+        },
+        {
+          "id": "downloads",
+          "label": "下载记录数",
+          "kind": "int"
+        },
+        {
+          "id": "wal_present",
+          "label": "WAL 存在",
+          "kind": "bool"
+        },
+        {
+          "id": "shm_present",
+          "label": "SHM 存在",
+          "kind": "bool"
+        },
+        {
+          "id": "wal_header",
+          "label": "主库头为 WAL 模式",
+          "kind": "bool"
+        },
+        {
+          "id": "snapshot_scope",
+          "label": "快照范围",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "main_database_only",
+              "label": "仅主库"
+            }
+          ]
+        },
+        {
+          "id": "snapshot_note",
+          "label": "快照说明",
+          "kind": "text"
+        },
+        {
+          "id": "error_code",
+          "label": "错误码",
+          "kind": "text"
+        },
+        {
+          "id": "error",
+          "label": "错误",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "browser.url.profile",
+      "label": "各配置 URL 访问",
+      "title": "{url}",
+      "fields": [
+        {
+          "id": "browser",
+          "label": "浏览器",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "profile",
+          "label": "配置",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "url",
+          "label": "URL",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "visits",
+          "label": "实际访问次数",
+          "kind": "int"
+        },
+        {
+          "id": "declared_visits",
+          "label": "urls.visit_count 汇总",
+          "kind": "int"
+        },
+        {
+          "id": "url_rows",
+          "label": "URL 行数",
+          "kind": "int"
+        },
+        {
+          "id": "titles",
+          "label": "标题",
+          "kind": "list"
+        },
+        {
+          "id": "first_visit",
+          "label": "首次访问",
+          "kind": "timestamp",
+          "timeline": "visited"
+        },
+        {
+          "id": "last_visit",
+          "label": "末次访问",
+          "kind": "timestamp",
+          "timeline": "visited"
+        }
+      ]
+    },
+    {
+      "type": "browser.url.total",
+      "label": "跨配置 URL 访问",
+      "title": "{url}",
+      "fields": [
+        {
+          "id": "url",
+          "label": "URL",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "profiles",
+          "label": "配置数",
+          "kind": "int"
+        },
+        {
+          "id": "browsers",
+          "label": "浏览器",
+          "kind": "list"
+        },
+        {
+          "id": "visits",
+          "label": "实际访问次数",
+          "kind": "int"
+        },
+        {
+          "id": "declared_visits",
+          "label": "urls.visit_count 汇总",
+          "kind": "int"
+        },
+        {
+          "id": "url_rows",
+          "label": "URL 行数",
+          "kind": "int"
+        },
+        {
+          "id": "titles",
+          "label": "标题",
+          "kind": "list"
+        },
+        {
+          "id": "first_visit",
+          "label": "首次访问",
+          "kind": "timestamp",
+          "timeline": "visited"
+        },
+        {
+          "id": "last_visit",
+          "label": "末次访问",
+          "kind": "timestamp",
+          "timeline": "visited"
+        }
+      ]
+    },
+    {
+      "type": "browser.title.profile",
+      "label": "各配置标题访问",
+      "title": "{title}",
+      "fields": [
+        {
+          "id": "browser",
+          "label": "浏览器",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "profile",
+          "label": "配置",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "title",
+          "label": "标题",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "visits",
+          "label": "实际访问次数",
+          "kind": "int"
+        },
+        {
+          "id": "declared_visits",
+          "label": "urls.visit_count 汇总",
+          "kind": "int"
+        },
+        {
+          "id": "url_rows",
+          "label": "URL 行数",
+          "kind": "int"
+        },
+        {
+          "id": "urls",
+          "label": "URL",
+          "kind": "list"
+        },
+        {
+          "id": "first_visit",
+          "label": "首次访问",
+          "kind": "timestamp",
+          "timeline": "visited"
+        },
+        {
+          "id": "last_visit",
+          "label": "末次访问",
+          "kind": "timestamp",
+          "timeline": "visited"
+        }
+      ]
+    },
+    {
+      "type": "browser.title.total",
+      "label": "跨配置标题访问",
+      "title": "{title}",
+      "fields": [
+        {
+          "id": "title",
+          "label": "标题",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "profiles",
+          "label": "配置数",
+          "kind": "int"
+        },
+        {
+          "id": "browsers",
+          "label": "浏览器",
+          "kind": "list"
+        },
+        {
+          "id": "visits",
+          "label": "实际访问次数",
+          "kind": "int"
+        },
+        {
+          "id": "declared_visits",
+          "label": "urls.visit_count 汇总",
+          "kind": "int"
+        },
+        {
+          "id": "url_rows",
+          "label": "URL 行数",
+          "kind": "int"
+        },
+        {
+          "id": "urls",
+          "label": "URL",
+          "kind": "list"
+        },
+        {
+          "id": "first_visit",
+          "label": "首次访问",
+          "kind": "timestamp",
+          "timeline": "visited"
+        },
+        {
+          "id": "last_visit",
+          "label": "末次访问",
+          "kind": "timestamp",
+          "timeline": "visited"
+        }
+      ]
+    },
+    {
+      "type": "browser.download",
+      "label": "下载记录",
+      "title": "{target_path}",
+      "fields": [
+        {
+          "id": "browser",
+          "label": "浏览器",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "profile",
+          "label": "配置",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "download_id",
+          "label": "下载 ID",
+          "kind": "int",
+          "key": true
+        },
+        {
+          "id": "target_path",
+          "label": "目标路径",
+          "kind": "path"
+        },
+        {
+          "id": "tab_url",
+          "label": "来源页",
+          "kind": "text"
+        },
+        {
+          "id": "referrer",
+          "label": "Referrer",
+          "kind": "text"
+        },
+        {
+          "id": "site_url",
+          "label": "站点",
+          "kind": "text"
+        },
+        {
+          "id": "start_time",
+          "label": "开始时间",
+          "kind": "timestamp",
+          "timeline": "visited"
+        },
+        {
+          "id": "received_bytes",
+          "label": "已接收字节",
+          "kind": "size"
+        },
+        {
+          "id": "total_bytes",
+          "label": "总字节",
+          "kind": "size"
+        },
+        {
+          "id": "state",
+          "label": "状态码",
+          "kind": "int"
+        },
+        {
+          "id": "state_name",
+          "label": "状态",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "in_progress",
+              "label": "进行中"
+            },
+            {
+              "id": "complete",
+              "label": "完成"
+            },
+            {
+              "id": "cancelled",
+              "label": "已取消"
+            },
+            {
+              "id": "interrupted",
+              "label": "已中断"
+            },
+            {
+              "id": "unknown",
+              "label": "未知"
+            }
+          ]
+        },
+        {
+          "id": "danger_type",
+          "label": "危险类型码",
+          "kind": "int"
+        },
+        {
+          "id": "danger_name",
+          "label": "危险类型",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "not_dangerous",
+              "label": "非危险"
+            },
+            {
+              "id": "dangerous_file",
+              "label": "危险文件"
+            },
+            {
+              "id": "dangerous_url",
+              "label": "危险地址"
+            },
+            {
+              "id": "dangerous_content",
+              "label": "危险内容"
+            },
+            {
+              "id": "maybe_dangerous_content",
+              "label": "可能危险"
+            },
+            {
+              "id": "uncommon_content",
+              "label": "少见内容"
+            },
+            {
+              "id": "user_validated",
+              "label": "用户确认"
+            },
+            {
+              "id": "dangerous_host",
+              "label": "危险主机"
+            },
+            {
+              "id": "potentially_unwanted",
+              "label": "潜在不受欢迎"
+            },
+            {
+              "id": "unknown",
+              "label": "未知"
+            }
+          ]
+        },
+        {
+          "id": "interrupt_reason",
+          "label": "中断原因码",
+          "kind": "int"
+        },
+        {
+          "id": "mime_type",
+          "label": "MIME 类型",
+          "kind": "text"
+        },
+        {
+          "id": "original_mime_type",
+          "label": "原始 MIME 类型",
+          "kind": "text"
+        },
+        {
+          "id": "current_path",
+          "label": "当前路径",
+          "kind": "path"
+        }
+      ]
+    }
+  ],
+  "schema_hash": "fnv1a64:e6613e71e648fa99"
+}

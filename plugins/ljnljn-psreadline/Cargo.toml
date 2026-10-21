@@ -2,15 +2,26 @@
 name = "ljnljn-psreadline"
 version = "0.1.0"
 edition = "2021"
-license = "AGPL-3.0-only"
+license.workspace = true
+description = "LovelyCarve LPP v2 analyzer: literal HTTP/HTTPS URLs in PSReadLine history"
+publish = false
 
 [lib]
 name = "ljnljn_psreadline"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-lovelycarve-plugin = { path = "../../sdk-v1/sdk" }
+lovelycarve-plugin = { path = "../../sdk-v2/sdk" }
 regex = "1"
+
+[dev-dependencies]
+lovelycarve-plugin = { path = "../../sdk-v2/sdk", features = ["testing"] }
+
+[lints.rust]
+linker_messages = "allow"
+
+[lints.clippy]
+uninlined_format_args = "warn"
 
 [workspace]
 

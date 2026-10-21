@@ -1,35 +1,19 @@
+# LPP v2 package manifest. Labels are the Chinese defaults; translations live
+# in locales/<locale>.toml under stable keys.
 id = "org.ljnljn.qq-setup-log"
 name = "QQ安装日志时间片段"
 version = "0.1.0"
-protocol_min = 1
-protocol_max = 1
-permissions = ["emit_artifacts"]
+protocol = 2
+library = "ljnljn_qq_setup_log"
+memory = "512MiB"
+permissions = []
 
-# ljnljn_kb_qq_setup_timeline_d569c0d3.dll（Windows）/ libljnljn_kb_qq_setup_timeline_d569c0d3.so
-# 由本 crate 构建，与 [lib].name 一致。解析不可信检材，保留 isolation = "process"。
-[library]
-path = "ljnljn_kb_qq_setup_timeline_d569c0d3"
-isolation = "process"
-
-# 单文件分析：手动触发（不声明 auto，避免在不相关文件上自动运行）。
-# 检材是 Windows 上的 QQ 安装日志，但日志本身是纯文本，任何平台的检材卷都能挂出，
-# 因此 platform = "all"。
-[task]
-type = "fileanalyzer"
-platform = "all"
-trigger = "manually"
-support = [
-  "qq_setup.log 编码判定：UTF-8（含 BOM）→ GBK → 替换字符降级",
-  "mmdd/hhmmss（4 位月日 + 斜杠 + 6 位时分秒）时间片段逐行抽取，保留原文",
-  "同行大小写不敏感分类：setup/install/开始安装/正在安装=install，完成/complete/success=complete，Show QQ Window/启动/launch=launch，其余含时间行为 other",
-  "事件按日志行序输出，保留行号与行原文（截断 200 字符）",
-  "无时间戳行计数 unparsedLineCount；越界时间值原值保留并列入 limitations",
-]
-
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.qq-setup-log"
-display = "解析 qq_setup.log 安装日志时间片段"
-# 扩展名提示（宿主可用于候选文件）；也支持在证据树内手动对任意文件调用。
+# A qq_setup.log (or any similarly shaped text log) selected by the user.
+[[analyzer]]
+id = "qq_setup_log"
+name = "QQ 安装日志时间片段"
+scope = "files"
+trigger = "manual"
+category = "qq"
 extensions = ["log", "txt"]
-priority = 10
+mime_types = ["text/plain"]

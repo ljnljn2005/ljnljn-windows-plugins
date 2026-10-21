@@ -1,27 +1,28 @@
+# LPP v2 package manifest. Labels are the Chinese defaults; translations live
+# in locales/<locale>.toml under stable keys.
 id = "org.ljnljn.recyclebin"
 name = "Windows 回收站元数据"
 version = "0.1.0"
-protocol_min = 1
-protocol_max = 1
-permissions = ["emit_artifacts"]
+protocol = 2
+library = "ljnljn_recyclebin"
+memory = "256MiB"
+permissions = []
 
-[library]
-path = "ljnljn_recyclebin"
-isolation = "process"
+# One selected $I file. No extension filter: an $I file keeps the extension of
+# the deleted file ($IABC123.txt, $IABC123.jpg, $IABC123), so any extension can
+# be a valid recycle-bin metadata file.
+[[analyzer]]
+id = "recyclebin_files"
+name = "回收站 $I 元数据（单文件）"
+scope = "files"
+trigger = "manual"
+category = "recyclebin"
 
-[task]
-type = "analysis"
-platform = "windows"
-trigger = "manually"
-support = ["回收站文件名", "删除时间", "原始大小", "回收站内容配对"]
-
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.recyclebin.file"
-display = "解析回收站 $I 文件"
-priority = 10
-
-[[capabilities]]
-type = "evidence_analyzer"
-analyzer = "ljnljn.recyclebin.evidence"
-display = "Windows 回收站记录"
+# The whole evidence item: every volume's $Recycle.Bin is scanned. Volume keys
+# are the top-level directories of an evidence view (part:1, part:2, ...).
+[[analyzer]]
+id = "recyclebin_evidence"
+name = "回收站记录（检材）"
+scope = "evidence"
+trigger = "manual"
+category = "recyclebin"

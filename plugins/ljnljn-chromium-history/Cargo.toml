@@ -3,6 +3,7 @@ name = "ljnljn-chromium-history"
 version = "0.1.0"
 edition = "2021"
 license = "AGPL-3.0-only"
+description = "LovelyCarve LPP v2 analyzer: Chromium (Chrome/Edge) History visits and downloads"
 publish = false
 
 [lib]
@@ -10,9 +11,17 @@ name = "ljnljn_chromium_history"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-lovelycarve-plugin = { path = "../../sdk-v1/sdk" }
-rusqlite = { version = "0.32.1", features = ["bundled", "serialize", "hooks"] }
-time = { version = "0.3", features = ["formatting"] }
+lovelycarve-plugin = { path = "../../sdk-v2/sdk" }
+rusqlite = { version = "0.32.1", features = ["bundled", "hooks", "serialize"] }
+
+[dev-dependencies]
+lovelycarve-plugin = { path = "../../sdk-v2/sdk", features = ["testing"] }
+
+[lints.rust]
+linker_messages = "allow"
+
+[lints.clippy]
+uninlined_format_args = "warn"
 
 [workspace]
 

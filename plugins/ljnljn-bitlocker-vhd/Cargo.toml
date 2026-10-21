@@ -1,37 +1,27 @@
 [package]
-name = "ljnljn-bitlocker-vhd-8f3c2a10"
+name = "ljnljn-bitlocker-vhd"
 version = "0.1.0"
 edition = "2021"
-license = "AGPL-3.0-only"
-description = "LovelyCarve file_analyzer: 识别 VHD/VHDX 中的 BitLocker -FVE-FS- 引导签名并解析恢复密钥 GUID"
+license.workspace = true
+description = "LovelyCarve LPP v2 analyzer: BitLocker signatures and recovery-key GUIDs in VHD/VHDX images"
 publish = false
 
 [lib]
-# cdylib 供宿主加载；rlib 让 `cargo test` 能链接测试。
-name = "ljnljn_kb_bitlocker_vhd_8f3c2a10"
+name = "ljnljn_bitlocker_vhd"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# 共享官方 SDK 快照（workspaces/_plugin-gen/_sdk，来源见 carve-plugins/SDK-SOURCE.json）。
-# SDK 的 Cargo.toml 使用 license.workspace = true，因此依赖指向完整工作区内的 sdk/ 子目录。
-lovelycarve-plugin = { path = "../../sdk-v1/sdk" }
+lovelycarve-plugin = { path = "../../sdk-v2/sdk" }
 
-[profile.release]
-# 与官方插件工作区一致：panic 在 C ABI 边界转成 LPP 错误，需要 unwind。
-panic = "unwind"
-opt-level = "s"
-lto = true
-codegen-units = 1
-strip = true
+[dev-dependencies]
+lovelycarve-plugin = { path = "../../sdk-v2/sdk", features = ["testing"] }
 
 [lints.rust]
-# MSVC link.exe 会为每个 DLL 报告生成的导入库。
 linker_messages = "allow"
 
 [lints.clippy]
 uninlined_format_args = "warn"
 
-# 本 crate 是独立工作区：不加入 carve-plugins 父工作区，避免影响其他插件。
 [workspace]
 
 [workspace.package]

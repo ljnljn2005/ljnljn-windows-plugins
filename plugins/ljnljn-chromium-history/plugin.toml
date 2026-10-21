@@ -1,27 +1,39 @@
+# LPP v2 package manifest. Labels are the Chinese defaults; translations live
+# in locales/<locale>.toml under stable keys.
 id = "org.ljnljn.chromium-history"
-name = "Chromium 多配置历史统计"
+name = "Chromium 浏览历史"
 version = "0.1.0"
-protocol_min = 1
-protocol_max = 1
-permissions = ["emit_artifacts"]
+protocol = 2
+library = "ljnljn_chromium_history"
+memory = "512MiB"
+permissions = []
 
-[library]
-path = "ljnljn_chromium_history"
-isolation = "process"
+[[analyzer]]
+id = "history"
+name = "Chrome / Edge 历史（当前系统）"
+scope = "system"
+platforms = ["windows"]
+trigger = "manual"
+category = "browserinfo"
+inputs = [
+  "Users/*/AppData/Local/Google/Chrome/User Data/*/History",
+  "Users/*/AppData/Local/Microsoft/Edge/User Data/*/History",
+]
 
-[task]
-type = "analysis"
-platform = "windows"
-trigger = "manually"
-support = ["Chrome 与 Edge 历史访问统计"]
+[[analyzer]]
+id = "history_evidence"
+name = "Chrome / Edge 历史（全部卷）"
+scope = "evidence"
+trigger = "manual"
+category = "browserinfo"
+inputs = [
+  "Users/*/AppData/Local/Google/Chrome/User Data/*/History",
+  "Users/*/AppData/Local/Microsoft/Edge/User Data/*/History",
+]
 
-[[capabilities]]
-type = "evidence_analyzer"
-analyzer = "ljnljn.chromium-history"
-display = "Chrome / Edge 多配置历史统计"
-
-[[capabilities]]
-type = "file_analyzer"
-analyzer = "ljnljn.chromium-history.file"
-mime_types = ["application/vnd.sqlite3", "application/x-sqlite3"]
-priority = 10
+[[analyzer]]
+id = "history_file"
+name = "历史（选定 History 数据库）"
+scope = "files"
+trigger = "manual"
+category = "browserinfo"

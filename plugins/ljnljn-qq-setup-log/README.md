@@ -1,44 +1,46 @@
-# ljnljn-qq-setup-log
+# ljnljn-qq-setup-log（LPP v2）
 
-LovelyCarve 原生插件（LPP v1 / C ABI v1），插件 ID `org.ljnljn.qq-setup-log`。
+从 LPP v1 迁移的腾讯 QQ 安装日志 `qq_setup.log` 时间片段插件。编码判定
+（UTF-8/BOM → GBK → 替换字符降级）、`mmdd/hhmmss` 抽取与安装/完成/启动
+分类保持原实现。
 
-从 qq_setup.log 提取安装、完成与启动标记的时间片段。
+- 插件 ID：`org.ljnljn.qq-setup-log`
+- 分析器：`qq_setup_log`（`files`，扩展名 `log` / `txt`）
+- 记录类型：
+  - `qqsetup.file`：编码、总行数、时间事件数、无时间片段行数、空行数与限制说明；
+  - `qqsetup.event`：行号、字符偏移、时间原文、月日时分秒、分类、全部命中类别、
+    原始行（截断 200 字符）与截断前字符数。
 
-## 分析器
+日志只有 `mmdd/hhmmss`，没有年份和时区，因此记录保留整数分量与原文，**不生成**
+`Timestamp`（否则需要猜测年份/时区）。越界时间值照常保留并写入限制说明；
+同一行多个片段各输出一条事件。单文件超过 9999 条事件时按 v1 结果上限拒绝该文件
+并告警；超过 16 MiB 或无法读取的文件产生 `RESOURCE_LIMIT` 告警，不会静默返回
+空结果。
 
-| 类型 | analyzer | 扩展名 |
-| --- | --- | --- |
-| 单文件 | `ljnljn.qq-setup-log` | log, txt |
+边界：不补年份、不做时区换算、不推断 QQ 使用时段、不关联安装软件或最近访问
+CSV、不校验 `QQ.exe` 版本；仅由标记行（无时间片段）表达的状态不会并入事件。
 
-## 覆盖范围
-
-- qq_setup.log 编码判定：UTF-8（含 BOM）→ GBK → 替换字符降级
-- mmdd/hhmmss（4 位月日 + 斜杠 + 6 位时分秒）时间片段逐行抽取，保留原文
-- 同行大小写不敏感分类：setup/install/开始安装/正在安装=install，完成/complete/success=complete，Show QQ Window/启动/launch=launch，其余含时间行为 other
-- 事件按日志行序输出，保留行号与行原文（截断 200 字符）
-- 无时间戳行计数 unparsedLineCount；越界时间值原值保留并列入 limitations
-
-## 构建
-
-仓库内置 LovelyCarve 插件 SDK（`vendor/lovelycarve-sdk`，AGPL-3.0），无需外部路径：
+## 构建与验证
 
 ```bash
 cargo test --locked
 cargo build --release --locked
+lc-plugin-host --describe --library target/release/ljnljn_qq_setup_log.dll > schema.json
 ```
 
-Windows 产物为 `target/release/ljnljn_kb_qq_setup_timeline_d569c0d3.dll`。
+`schema.json` 应列出 `org.ljnljn.qq-setup-log`、`qq_setup_log`、
+`qqsetup.file` 与 `qqsetup.event`。
 
-## 安装
+## 安装布局
 
-把 `plugin.toml` 与构建出的 `ljnljn_kb_qq_setup_timeline_d569c0d3.dll` 放进 LovelyCarve 插件目录下的同名子目录，重启引擎后生效。插件使用 `isolation = "process"`。
-
-## 取证边界
-
-只解析文本日志，不执行日志中的命令。
-
-插件只读检材，不执行检材内容，不访问网络。已通过仓库内单元测试与 release 构建；尚未在真实 LovelyCarve GUI 与真实案件检材上完成端到端验证。
+```text
+ljnljn-qq-setup-log/
+├── plugin.toml
+├── ljnljn_qq_setup_log.dll
+├── schema.json
+└── locales/{en.toml,zh-CN.toml}
+```
 
 ## 许可证
 
-AGPL-3.0-only，见 [LICENSE](LICENSE)。内置 SDK 保留其原始许可证与协议文档。
+AGPL-3.0-only，见 [LICENSE](LICENSE)。

@@ -1,0 +1,452 @@
+{
+  "protocol": 2,
+  "plugin": "org.ljnljn.windows-registry",
+  "sdk": "0.2.0",
+  "analyzers": [
+    "sam_accounts",
+    "sam_accounts_system",
+    "software_version",
+    "software_version_file",
+    "uninstall",
+    "uninstall_file",
+    "usbstor",
+    "usbstor_file",
+    "password_policy",
+    "password_policy_file"
+  ],
+  "filesystems": [],
+  "records": [
+    {
+      "type": "profile.fact",
+      "label": "检材画像",
+      "title": "{key}",
+      "fields": [
+        {
+          "id": "key",
+          "label": "键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "json"
+        },
+        {
+          "id": "system",
+          "label": "系统",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "windows.sam.account",
+      "label": "SAM 账号与哈希",
+      "title": "{name} ({rid})",
+      "fields": [
+        {
+          "id": "name",
+          "label": "账号名",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "rid",
+          "label": "RID",
+          "kind": "int",
+          "key": true
+        },
+        {
+          "id": "sid",
+          "label": "SID",
+          "kind": "text"
+        },
+        {
+          "id": "user_key",
+          "label": "用户键",
+          "kind": "text"
+        },
+        {
+          "id": "user_key_path",
+          "label": "用户键路径",
+          "kind": "text"
+        },
+        {
+          "id": "nt_hash",
+          "label": "NT 哈希",
+          "kind": "hash"
+        },
+        {
+          "id": "nt_state",
+          "label": "NT 状态",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "present",
+              "label": "可用"
+            },
+            {
+              "id": "zero_placeholder",
+              "label": "全零占位"
+            },
+            {
+              "id": "unavailable",
+              "label": "不可用"
+            },
+            {
+              "id": "not_saved",
+              "label": "未保存"
+            }
+          ]
+        },
+        {
+          "id": "nt_reason",
+          "label": "NT 说明",
+          "kind": "text"
+        },
+        {
+          "id": "lm_hash",
+          "label": "LM 哈希",
+          "kind": "hash"
+        },
+        {
+          "id": "lm_state",
+          "label": "LM 状态",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "present",
+              "label": "可用"
+            },
+            {
+              "id": "zero_placeholder",
+              "label": "全零占位"
+            },
+            {
+              "id": "unavailable",
+              "label": "不可用"
+            },
+            {
+              "id": "not_saved",
+              "label": "未保存"
+            }
+          ]
+        },
+        {
+          "id": "lm_reason",
+          "label": "LM 说明",
+          "kind": "text"
+        },
+        {
+          "id": "hash_algorithm",
+          "label": "哈希算法",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "nt",
+              "label": "NT"
+            },
+            {
+              "id": "lm",
+              "label": "LM"
+            },
+            {
+              "id": "none",
+              "label": "无"
+            }
+          ]
+        },
+        {
+          "id": "login_count",
+          "label": "登录次数",
+          "kind": "int"
+        },
+        {
+          "id": "last_login",
+          "label": "最后登录",
+          "kind": "timestamp",
+          "timeline": "login"
+        },
+        {
+          "id": "last_login_raw",
+          "label": "最后登录 FILETIME",
+          "kind": "int"
+        },
+        {
+          "id": "decrypt_ok",
+          "label": "解密校验",
+          "kind": "bool"
+        },
+        {
+          "id": "decrypt_reason",
+          "label": "解密说明",
+          "kind": "text"
+        },
+        {
+          "id": "f_rid",
+          "label": "F 值 RID",
+          "kind": "int"
+        },
+        {
+          "id": "nt_offset",
+          "label": "NT 偏移",
+          "kind": "int"
+        },
+        {
+          "id": "nt_len",
+          "label": "NT 长度",
+          "kind": "int"
+        },
+        {
+          "id": "lm_offset",
+          "label": "LM 偏移",
+          "kind": "int"
+        },
+        {
+          "id": "lm_len",
+          "label": "LM 长度",
+          "kind": "int"
+        },
+        {
+          "id": "limitations",
+          "label": "限制与说明",
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "type": "windows.sam.bootkey",
+      "label": "SAM bootkey 派生",
+      "title": "{base_path}",
+      "fields": [
+        {
+          "id": "base_path",
+          "label": "Lsa 路径",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "bootkey",
+          "label": "bootkey",
+          "kind": "hash"
+        },
+        {
+          "id": "permuted",
+          "label": "置换前数据",
+          "kind": "hash"
+        },
+        {
+          "id": "classes",
+          "label": "类名",
+          "kind": "text"
+        },
+        {
+          "id": "class_cells",
+          "label": "类名单元",
+          "kind": "text"
+        },
+        {
+          "id": "limitations",
+          "label": "限制与说明",
+          "kind": "list"
+        }
+      ]
+    },
+    {
+      "type": "windows.software.version",
+      "label": "SOFTWARE 系统版本",
+      "title": "{product_name}",
+      "fields": [
+        {
+          "id": "product_name",
+          "label": "产品名称",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "current_version",
+          "label": "当前版本",
+          "kind": "text"
+        },
+        {
+          "id": "current_build",
+          "label": "当前构建",
+          "kind": "text"
+        },
+        {
+          "id": "current_build_number",
+          "label": "构建号",
+          "kind": "text"
+        },
+        {
+          "id": "csd_version",
+          "label": "CSD 版本",
+          "kind": "text"
+        },
+        {
+          "id": "build_lab_ex",
+          "label": "BuildLabEx",
+          "kind": "text"
+        },
+        {
+          "id": "install_date",
+          "label": "InstallDate 原值",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "windows.registry.uninstall",
+      "label": "Uninstall 安装项",
+      "title": "{name}",
+      "fields": [
+        {
+          "id": "name",
+          "label": "显示名称",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "key",
+          "label": "安装项键",
+          "kind": "text"
+        },
+        {
+          "id": "display_version",
+          "label": "显示版本",
+          "kind": "text"
+        },
+        {
+          "id": "publisher",
+          "label": "发布者",
+          "kind": "text"
+        },
+        {
+          "id": "install_date",
+          "label": "InstallDate 原值",
+          "kind": "text"
+        },
+        {
+          "id": "install_location",
+          "label": "安装位置",
+          "kind": "text"
+        },
+        {
+          "id": "key_last_write",
+          "label": "键最后写入",
+          "kind": "timestamp",
+          "timeline": "modified"
+        },
+        {
+          "id": "wow64",
+          "label": "WOW6432Node",
+          "kind": "bool"
+        }
+      ]
+    },
+    {
+      "type": "windows.registry.usbstor",
+      "label": "USB 存储设备",
+      "title": "{device} / {instance}",
+      "fields": [
+        {
+          "id": "device",
+          "label": "设备键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "instance",
+          "label": "实例键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "friendly_name",
+          "label": "设备名称",
+          "kind": "text"
+        },
+        {
+          "id": "device_desc",
+          "label": "设备描述",
+          "kind": "text"
+        },
+        {
+          "id": "service",
+          "label": "驱动服务",
+          "kind": "text"
+        },
+        {
+          "id": "container_id",
+          "label": "容器 ID",
+          "kind": "text"
+        },
+        {
+          "id": "hardware_id",
+          "label": "硬件 ID",
+          "kind": "text"
+        },
+        {
+          "id": "first_install",
+          "label": "首次安装",
+          "kind": "timestamp"
+        },
+        {
+          "id": "last_arrival",
+          "label": "最后接入",
+          "kind": "timestamp"
+        },
+        {
+          "id": "device_last_write",
+          "label": "设备键最后写入",
+          "kind": "timestamp",
+          "timeline": "modified"
+        },
+        {
+          "id": "instance_last_write",
+          "label": "实例键最后写入",
+          "kind": "timestamp",
+          "timeline": "modified"
+        }
+      ]
+    },
+    {
+      "type": "windows.registry.policy",
+      "label": "SAM 密码策略",
+      "title": "MaxPasswordAge",
+      "fields": [
+        {
+          "id": "max_password_age_raw",
+          "label": "原始 100ns",
+          "kind": "int"
+        },
+        {
+          "id": "max_password_age_seconds",
+          "label": "最长留存期（秒）",
+          "kind": "int"
+        },
+        {
+          "id": "max_password_age_days",
+          "label": "最长留存期（天）",
+          "kind": "int"
+        },
+        {
+          "id": "state",
+          "label": "状态",
+          "kind": "enum",
+          "choices": [
+            {
+              "id": "set",
+              "label": "已设置"
+            },
+            {
+              "id": "never_or_unset",
+              "label": "未设置或永不过期"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "schema_hash": "fnv1a64:886c57331282af2d"
+}

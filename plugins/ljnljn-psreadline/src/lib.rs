@@ -1,178 +1,253 @@
+//! Literal HTTP/HTTPS URLs in Windows PSReadLine history (LPP v2).
+//!
+//! The parser is unchanged from the LPP v1 plugin: UTF-8 / BOM UTF-16
+//! decoding, logical commands (a trailing backtick joins continuation
+//! lines), literal `http(s)://` extraction and per-command URLs.
+//!
+//! The file analyzer reads the history file the user selected; the evidence
+//! analyzer walks the standard per-user PSReadLine paths on every volume of
+//! the evidence item. A history file with no execution timestamps cannot
+//! produce timeline events, so this plugin emits no `Timestamp` fields.
+
 mod parser;
 
-use lovelycarve_plugin::{
-    AnalysisResult, Artifact, Attributes, Error, Evidence, EvidenceAnalyzer,
-    File, FileAnalyzer, Plugin, Result, ResultColumn, ResultNode, Value,
-};
+#[cfg(test)]
+mod tests;
 
-const ID: &str = "org.ljnljn.psreadline";
-const NAME: &str = "PowerShell历史URL";
-const SUBITEM: &str = "PowerShell历史URL";
+use lovelycarve_plugin::{export_plugin, FileRef, Plugin, Record, Result, Run};
+
+/// Standard ConsoleHost history paths, relative to a user profile.
 const RELATIVE: [&str; 2] = [
     "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
     "AppData/Roaming/Microsoft/PowerShell/PSReadLine/ConsoleHost_history.txt",
 ];
 
-struct Analyzer;
+/// Most entries enumerated from one `Users` directory.
+const MAX_USERS: usize = 512;
 
-fn result() -> AnalysisResult {
-    AnalysisResult {
-        nodes: vec![
-            ResultNode {
-                node_type: "psreadline.total".into(),
-                name: "全部历史统计".into(),
-                columns: [
-                    ("psreadline.file_count", "历史文件数"),
-                    ("psreadline.url_command_count", "含URL命令总数"),
-                ].into_iter().map(|(key, label)| ResultColumn { key: key.into(), label: label.into() }).collect(),
-            },
-            ResultNode {
-                node_type: "psreadline.history".into(),
-                name: "历史文件统计".into(),
-                columns: [
-                    ("source.path", "来源文件"),
-                    ("psreadline.command_count", "命令数"),
-                    ("psreadline.url_command_count", "含URL命令数"),
-                ].into_iter().map(|(key, label)| ResultColumn { key: key.into(), label: label.into() }).collect(),
-            },
-            ResultNode {
-                node_type: "psreadline.command".into(),
-                name: "含URL的命令".into(),
-                columns: [
-                    ("source.path", "来源文件"),
-                    ("psreadline.line", "起始行"),
-                    ("psreadline.command", "历史命令"),
-                    ("ljnljn.psreadline.urls", "URL"),
-                ].into_iter().map(|(key, label)| ResultColumn { key: key.into(), label: label.into() }).collect(),
-            },
-        ],
-        ..AnalysisResult::default()
-    }
+#[derive(Record)]
+#[record(
+    id = "psreadline.history",
+    label = "历史文件统计",
+    title = "{url_command_count} 条含 URL 命令"
+)]
+struct HistoryFile {
+    #[field(label = "来源文件")]
+    source_file: String,
+    #[field(label = "命令数")]
+    command_count: usize,
+    #[field(label = "含 URL 命令数")]
+    url_command_count: usize,
 }
 
-fn append(out: &mut AnalysisResult, bytes: &[u8], source: &Attributes) -> Result<usize> {
-    let history = parser::parse(bytes).map_err(|e| Error::new("INVALID_HISTORY", e))?;
-    if out.artifacts.len() + history.matches.len() + 1 > 9000 {
-        return Err(Error::new("RESOURCE_LIMIT", "combined results exceed 9000 items; no partial total returned"));
-    }
-    let count = history.matches.len();
-    let mut attributes = source.clone();
-    attributes.insert("psreadline.command_count", history.commands as u64);
-    attributes.insert("psreadline.url_command_count", count as u64);
-    attributes.insert("psreadline.count_basis", "nonblank logical commands; multiline continuation joined; repeated commands counted separately");
-    attributes.insert("psreadline.limitations", "literal HTTP/HTTPS addresses only; not proof that a request ran or succeeded; history contains no reliable execution timestamps");
-    out.artifacts.push(Artifact {
-        artifact_type: "psreadline.history".into(),
-        title: "PowerShell历史统计".into(),
-        value: Some((count as u64).into()), attributes,
-    });
-    for command in history.matches {
-        let mut attributes = source.clone();
-        attributes.insert("psreadline.index", command.index as u64);
-        attributes.insert("psreadline.line", command.line as u64);
-        attributes.insert("psreadline.command", command.text.clone());
-        attributes.insert("ljnljn.psreadline.urls", Value::Array(command.urls.into_iter().map(Value::from).collect()));
-        out.artifacts.push(Artifact {
-            artifact_type: "psreadline.command".into(),
-            title: format!("历史命令 #{}", command.index),
-            value: Some(command.text.into()), attributes,
-        });
-    }
-    if lovelycarve_plugin::value::encode(&out.to_value())?.len() > 7 * 1024 * 1024 - 8192 {
-        return Err(Error::new("RESOURCE_LIMIT", "encoded history results exceed 7 MiB; no partial count returned"));
-    }
-    Ok(count)
+#[derive(Record)]
+#[record(
+    id = "psreadline.command",
+    label = "含 URL 的历史命令",
+    title = "命令 {index} · 第 {line} 行"
+)]
+struct HistoryCommand {
+    #[field(label = "命令序号")]
+    index: usize,
+    #[field(label = "起始行")]
+    line: usize,
+    #[field(label = "命令")]
+    command: String,
+    #[field(label = "URL", kind = "list")]
+    urls: Vec<String>,
 }
 
-impl FileAnalyzer for Analyzer {
-    fn analyzer(&self) -> &str { "ljnljn.psreadline.urls.file" }
-    fn analyze(&self, file: &File) -> Result<AnalysisResult> {
-        file.context().check_cancelled()?;
-        if file.size() > parser::MAX_BYTES as u64 {
-            return Err(Error::new("RESOURCE_LIMIT", "history exceeds 4 MiB"));
-        }
-        let bytes = file.read(0, file.size() as usize)?;
-        if bytes.len() as u64 != file.size() {
-            return Err(Error::new("SHORT_READ", "history file was not read completely"));
-        }
-        let source: Attributes = [
-            ("source.path", file.name()),
-            ("source.file_id", file.id()),
-        ].into_iter().collect();
-        let mut out = result();
-        let count = append(&mut out, &bytes, &source)?;
-        file.context().check_cancelled()?;
-        out.summary = Some(format!("找到 {count} 条含HTTP/HTTPS地址的历史命令；仅表示命令被保存，不证明已执行或请求成功。"));
-        Ok(out)
-    }
+#[derive(Record)]
+#[record(
+    id = "psreadline.total",
+    label = "全部历史统计",
+    title = "{url_command_count} 条含 URL 命令 / {file_count} 份历史"
+)]
+struct HistoryTotal {
+    #[field(label = "历史文件数")]
+    file_count: usize,
+    #[field(label = "含 URL 命令总数")]
+    url_command_count: usize,
 }
 
-impl EvidenceAnalyzer for Analyzer {
-    fn analyzer(&self) -> &str { "ljnljn.psreadline.urls" }
-    fn analyze_evidence(&self, evidence: &Evidence) -> Result<AnalysisResult> {
-        let mut out = result();
-        if !evidence.wants(SUBITEM) {
-            out.summary = Some("未选择PowerShell历史URL子项。".into());
-            return Ok(out);
+/// A view path component the plugin is willing to join.
+fn component(name: &str) -> bool {
+    !name.is_empty()
+        && name != "."
+        && name != ".."
+        && !name.contains(['/', '\\'])
+        && !name.chars().any(char::is_control)
+}
+
+/// Parses one history file and emits its typed records. Returns the number of
+/// URL-bearing commands, or `None` after a warning when the file is unusable.
+fn analyze_file(run: &Run, file: &FileRef, source_file: &str, note: &str) -> Result<Option<usize>> {
+    let bytes = match file.read_all(parser::MAX_BYTES as u64) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            run.warn_file(file, &error.code, error.message)?;
+            return Ok(None);
         }
-        let mut files = 0;
-        let mut count = 0;
-        for root in evidence.roots()? {
-            let volume = evidence.volume(&root.root_id);
-            let mut profiles = vec![String::new()];
-            if volume.is_dir("Users")? {
-                let users = volume.list("Users")?;
-                if users.len() > 512 {
-                    return Err(Error::new("RESOURCE_LIMIT", "Users directory exceeds 512 entries"));
+    };
+    let history = match parser::parse(&bytes) {
+        Ok(history) => history,
+        Err(message) => {
+            run.warn_file(file, "INVALID_HISTORY", format!("{source_file}: {message}"))?;
+            return Ok(None);
+        }
+    };
+
+    run.record(&HistoryFile {
+        source_file: source_file.to_owned(),
+        command_count: history.commands,
+        url_command_count: history.matches.len(),
+    })
+    .from(file)
+    .note(note)
+    .emit()?;
+
+    for command in &history.matches {
+        run.record(&HistoryCommand {
+            index: command.index,
+            line: command.line,
+            command: command.text.clone(),
+            urls: command.urls.clone(),
+        })
+        .from(file)
+        .note(format!("line {}", command.line))
+        .emit()?;
+    }
+    Ok(Some(history.matches.len()))
+}
+
+fn psreadline_files(run: &Run) -> Result<()> {
+    let mut files = 0usize;
+    let mut invalid = 0usize;
+    let mut commands = 0usize;
+
+    for file in run.inputs() {
+        run.check_cancelled()?;
+        match analyze_file(run, file, file.name(), file.name())? {
+            Some(found) => {
+                files += 1;
+                commands += found;
+            }
+            None => invalid += 1,
+        }
+    }
+
+    if run.inputs().is_empty() {
+        run.warn(
+            "INPUT_NOT_FOUND",
+            "未选择 PowerShell 历史文件；请选择 ConsoleHost_history.txt 或使用检材分析器",
+        )?;
+    }
+    run.set_summary(format!(
+        "读取 {files} 份 PSReadLine 历史，共 {commands} 条含 URL 的命令；无法解析 {invalid} 份。历史文件没有可靠的执行时间，不生成时间线。"
+    ));
+    Ok(())
+}
+
+fn psreadline_evidence(run: &Run) -> Result<()> {
+    let view = run.require_view()?;
+    let roots = view.list("")?;
+    let mut files = 0usize;
+    let mut invalid = 0usize;
+    let mut commands = 0usize;
+    let mut volumes = 0usize;
+
+    for root in roots {
+        if !root.is_dir() || !component(&root.name) {
+            continue;
+        }
+        run.check_cancelled()?;
+        volumes += 1;
+        let mut profiles = vec![String::new()];
+        let users_path = format!("{}/Users", root.name);
+        let users = view.list_or_empty(&users_path)?;
+        if users.len() > MAX_USERS {
+            run.warn(
+                "USERS_LIMIT",
+                format!(
+                    "{users_path} 有 {} 个条目，超过 {MAX_USERS} 个上限；未枚举该卷的用户目录，仅检查卷根路径",
+                    users.len()
+                ),
+            )?;
+        } else {
+            for user in users {
+                if !user.is_dir() || user.deleted {
+                    continue;
                 }
-                for user in users.into_iter().filter(|n| n.is_dir() && !n.deleted) {
-                    if user.name.contains(['/', '\\']) || matches!(user.name.as_str(), "." | "..") {
-                        return Err(Error::new("INVALID_PATH", "unsafe user directory component"));
+                if !component(&user.name) {
+                    run.warn(
+                        "INVALID_PATH",
+                        format!("{users_path}: 非法的用户目录名 {:?}", user.name),
+                    )?;
+                    continue;
+                }
+                profiles.push(format!("Users/{}", user.name));
+            }
+        }
+
+        for profile in profiles {
+            for relative in RELATIVE {
+                run.check_cancelled()?;
+                let path = if profile.is_empty() {
+                    format!("{}/{}", root.name, relative)
+                } else {
+                    format!("{}/{}/{}", root.name, profile, relative)
+                };
+                let Some(node) = view.stat(&path)? else {
+                    continue;
+                };
+                if !node.is_file() || node.deleted {
+                    continue;
+                }
+                let Some(file) = view.open(&path)? else {
+                    run.warn(
+                        "FILE_DISAPPEARED",
+                        format!("{path}: 列出后无法打开，未产生记录"),
+                    )?;
+                    invalid += 1;
+                    continue;
+                };
+                match analyze_file(run, &file, &path, &path)? {
+                    Some(found) => {
+                        files += 1;
+                        commands += found;
                     }
-                    profiles.push(format!("Users/{}", user.name));
+                    None => invalid += 1,
                 }
             }
-            for profile in profiles {
-                for relative in RELATIVE {
-                    evidence.context().check_cancelled()?;
-                    let path = if profile.is_empty() { relative.into() } else { format!("{profile}/{relative}") };
-                    let Some(node) = volume.stat(&path)? else { continue };
-                    if !node.is_file() || node.deleted { continue; }
-                    if node.size > parser::MAX_BYTES as u64 {
-                        return Err(Error::new("RESOURCE_LIMIT", format!("history exceeds 4 MiB: {path}")));
-                    }
-                    let bytes = volume.read(&path, 0, Some(node.size))?;
-                    if bytes.len() as u64 != node.size { return Err(Error::new("SHORT_READ", path)); }
-                    let mut source: Attributes = [
-                        ("source.path", path.as_str()),
-                        ("source.root", root.root_id.as_str()),
-                        ("source.evidence_id", evidence.id()),
-                    ].into_iter().collect();
-                    source.insert("source.scope", "standard Users and profile-root Windows PowerShell/PowerShell PSReadLine paths");
-                    count += append(&mut out, &bytes, &source)?;
-                    files += 1;
-                }
-            }
         }
-        if files == 0 { return Err(Error::not_found("No ConsoleHost_history.txt in standard Windows user-profile paths; select an exported history file with the file analyzer")); }
-        let attributes: Attributes = [
-            ("source.evidence_id", Value::from(evidence.id())),
-            ("psreadline.file_count", Value::from(files as u64)),
-            ("psreadline.url_command_count", Value::from(count as u64)),
-            ("psreadline.count_basis", Value::from("sum of per-file logical commands; repeated and cross-profile commands are not deduplicated")),
-        ].into_iter().collect();
-        out.artifacts.push(Artifact {
-            artifact_type: "psreadline.total".into(),
-            title: "全部已读取历史文件的含URL命令总数".into(),
-            value: Some((count as u64).into()), attributes,
-        });
-        out.summary = Some(format!("读取 {files} 份PSReadLine历史，共 {count} 条含URL的命令。自定义HistorySavePath、其他host历史文件及已删除历史不在自动扫描范围；不推断执行时间。"));
-        Ok(out)
     }
+
+    if files == 0 {
+        run.warn(
+            "HISTORY_NOT_FOUND",
+            format!(
+                "在 {volumes} 个卷的标准用户目录中未找到 ConsoleHost_history.txt；自定义 HistorySavePath 与其他 host 的历史不在扫描范围"
+            ),
+        )?;
+    } else {
+        run.emit(&HistoryTotal {
+            file_count: files,
+            url_command_count: commands,
+        })?;
+    }
+    run.set_summary(format!(
+        "扫描 {volumes} 个卷，读取 {files} 份 PSReadLine 历史，共 {commands} 条含 URL 的命令；无法解析 {invalid} 份。不推断执行时间。"
+    ));
+    Ok(())
 }
 
 fn plugin() -> Plugin {
-    Plugin::new(ID, NAME, "0.1.0").file_analyzer(Analyzer).evidence_analyzer(Analyzer)
+    Plugin::new("org.ljnljn.psreadline")
+        .record::<HistoryFile>()
+        .record::<HistoryCommand>()
+        .record::<HistoryTotal>()
+        .analyzer("psreadline_files", psreadline_files)
+        .analyzer("psreadline_evidence", psreadline_evidence)
 }
 
-lovelycarve_plugin::export_plugin!(plugin);
+export_plugin!(plugin);

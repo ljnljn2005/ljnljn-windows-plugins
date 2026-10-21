@@ -1,8 +1,9 @@
 //! 注册表 hive(REGF)只读解析:文件头校验、hbin 结构校验、键(ck)/值(vk)与类名访问。
 //!
 //! 结构依据(通用公开格式,非案件取值):
-//!   base block 0x000 magic "regf" | 0x004 seq1 | 0x008 seq2 | 0x024 major | 0x028 minor
-//!               0x02C type | 0x030 format | 0x034 root cell rel offset | 0x038 hbins size
+//!   base block 0x000 magic "regf" | 0x004 seq1 | 0x008 seq2 | 0x00C last write
+//!               0x014 major | 0x018 minor | 0x01C type | 0x020 format
+//!               0x024 root cell rel offset | 0x028 hbins size | 0x030 file name
 //!   hbin        0x000 magic "hbin" | 0x004 相对文件偏移 | 0x008 hbin 字节数(4KiB 对齐)
 //!   cell        4 字节有符号长度:|len| 为单元总长,负数表示已分配
 //!   nk(key)     0x000 id 0x6B6E | 0x002 flags | 0x014 子键数 | 0x01C 子键列表 rel
@@ -24,11 +25,11 @@ const REGF_MAGIC: &[u8; 4] = b"regf";
 const HBIN_MAGIC: &[u8; 4] = b"hbin";
 const NK_ID: u16 = 0x6B6E; // "nk"
 const VK_ID: u16 = 0x6B76; // "vk"
-const DB_ID: u16 = 0xDB; // big data
-const LF_ID: u16 = 0x6C66; // "lf"
-const LH_ID: u16 = 0x6C68; // "lh"
-const LI_ID: u16 = 0x6C69; // "li"
-const RI_ID: u16 = 0x6972; // "ri"
+const DB_ID: u16 = u16::from_le_bytes(*b"db"); // big data cell signature
+const LF_ID: u16 = u16::from_le_bytes(*b"lf");
+const LH_ID: u16 = u16::from_le_bytes(*b"lh");
+const LI_ID: u16 = u16::from_le_bytes(*b"li");
+const RI_ID: u16 = u16::from_le_bytes(*b"ri");
 const HBIN_ALIGN: u32 = 0x1000;
 const BIG_SEGMENT: usize = 16344;
 
@@ -153,6 +154,8 @@ pub struct KeyNode {
 pub struct ValueNode {
     pub cell: u64,
     pub name: String,
+    /// 值名在 vk 中的 UTF-16 字节数（内联数据起点 = 0x14 + name_len）。
+    pub name_len: u16,
     pub data_len: u32,
     pub data: Option<u64>,
     pub data_type: u32,
@@ -188,12 +191,27 @@ impl Hive {
                 format!("base block magic 期望 regf,实际 {:02X?}", &bytes[0..4]),
             ));
         }
-        let hbins_size = read_u32(&bytes, 0x38)
+        let hbins_size = read_u32(&bytes, 0x28)
             .ok_or_else(|| RegfError::new(RegfStage::Header, "base block 截断"))?;
         let root_cell = u64::from(
-            read_u32(&bytes, 0x34)
+            read_u32(&bytes, 0x24)
                 .ok_or_else(|| RegfError::new(RegfStage::Header, "base block 截断"))?,
         );
+        let major = read_u32(&bytes, 0x14).unwrap_or(0);
+        let minor = read_u32(&bytes, 0x18).unwrap_or(0);
+        if major != 1 || minor > 6 {
+            return Err(RegfError::new(
+                RegfStage::Header,
+                format!("不支持的 regf 版本 {major}.{minor}（仅支持 1.0–1.6）"),
+            ));
+        }
+        let file_type = read_u32(&bytes, 0x1C).unwrap_or(1);
+        if file_type != 0 {
+            return Err(RegfError::new(
+                RegfStage::Header,
+                format!("base block 文件类型 {file_type} 不是主 hive（0）"),
+            ));
+        }
         if hbins_size == 0 || hbins_size % HBIN_ALIGN != 0 {
             return Err(RegfError::new(
                 RegfStage::Hbin,
@@ -269,10 +287,13 @@ impl Hive {
                 ));
             }
             let declared = read_u32(&self.bytes, offset as usize + 0x04).unwrap_or(0);
-            if u64::from(declared) != offset {
+            let relative = offset - BASE_BLOCK_SIZE as u64;
+            if u64::from(declared) != relative {
                 return Err(RegfError::new(
                     RegfStage::Hbin,
-                    format!("hbin @0x{offset:X} 偏移字段 {declared} 与位置不符"),
+                    format!(
+                        "hbin @0x{offset:X} 偏移字段 {declared} 与相对偏移 0x{relative:X} 不符"
+                    ),
                 ));
             }
             let size = read_u32(&self.bytes, offset as usize + 0x08).unwrap_or(0);
@@ -317,13 +338,8 @@ impl Hive {
                     ),
                 ));
             }
-            let tail = self.cell_raw_len(cursor + length - 4)?;
-            if tail != raw {
-                return Err(RegfError::new(
-                    RegfStage::Cell,
-                    format!("cell @0x{cursor:X} 起止长度不匹配({raw} / {tail})"),
-                ));
-            }
+            // 真实 hive 只在 cell 起点写长度；末尾 4 字节属于载荷/空闲区，
+            // 不能当作第二个长度字段校验（v1 的严格实现会误拒合法 hive）。
             self.cells.borrow_mut().insert(
                 cursor - BASE_BLOCK_SIZE as u64,
                 CellInfo {
@@ -379,23 +395,14 @@ impl Hive {
                 format!("cell @相对 0x{relative:X} 长度 {raw} 非法"),
             ));
         }
-        match self.cell_raw_len(absolute + length - 4) {
-            Ok(tail) if tail == raw => {
-                let info = CellInfo {
-                    offset: relative,
-                    data: absolute + 4,
-                    len: length - 4,
-                    allocated: raw < 0,
-                };
-                self.cells.borrow_mut().insert(relative, info);
-                Ok(info)
-            }
-            Ok(tail) => Err(RegfError::new(
-                RegfStage::Cell,
-                format!("cell @相对 0x{relative:X} 起止长度不匹配({raw} / {tail})"),
-            )),
-            Err(error) => Err(error),
-        }
+        let info = CellInfo {
+            offset: relative,
+            data: absolute + 4,
+            len: length - 4,
+            allocated: raw < 0,
+        };
+        self.cells.borrow_mut().insert(relative, info);
+        Ok(info)
     }
 
     fn cell_data(&self, offset: u64) -> RegfResult<(CellInfo, &[u8])> {
@@ -487,7 +494,10 @@ impl Hive {
         if raw.iter().all(|byte| (0x20..=0x7e).contains(byte)) {
             return Ok(String::from_utf8_lossy(raw).trim_end_matches('\0').to_string());
         }
-        Ok(utf16_name(raw, RegfStage::Utf16).unwrap_or_default())
+        Ok(utf16_name(raw, RegfStage::Utf16)
+            .unwrap_or_default()
+            .trim_end_matches('\0')
+            .to_string())
     }
 
     /// 逐级下行定位键,失败时给出具体路径与阶段。
@@ -631,9 +641,9 @@ impl Hive {
                 format!("值单元 @0x{cell:X} 签名期望 vk,实际 0x{id:04X}"),
             ));
         }
-        let name_len = u16::from_le_bytes([data[2], data[3]]) as usize;
+        let name_len = u16::from_le_bytes([data[2], data[3]]);
         let name_end = 0x14_usize
-            .checked_add(name_len)
+            .checked_add(usize::from(name_len))
             .filter(|end| *end <= data.len())
             .ok_or_else(|| {
                 RegfError::new(
@@ -656,6 +666,7 @@ impl Hive {
         Ok(ValueNode {
             cell: info.offset,
             name,
+            name_len,
             data_len,
             data: data_offset,
             data_type: read_u32(data, 0xC).unwrap_or(0),
@@ -668,7 +679,7 @@ impl Hive {
         let len = value.effective_len() as usize;
         if value.is_inline() {
             let (_, data) = self.cell_data(value.cell)?;
-            let start = 0x14 + value.name.len() * 2;
+            let start = 0x14 + usize::from(value.name_len);
             let mut out = data.get(start..).map(|slice| slice.to_vec()).unwrap_or_default();
             out.truncate(len.min(4));
             return Ok(out);
@@ -814,6 +825,18 @@ mod tests {
     }
 
     #[test]
+    fn inline_value_with_non_ascii_name_uses_utf16_name_length() {
+        let spec = KeySpec::new("SYSTEM").value("密码", 4, vec![0xAA, 0xBB, 0xCC, 0xDD]);
+        let hive = Hive::open(build_hive(&spec)).expect("parses");
+        let values = hive.values(hive.root_cell()).expect("values");
+        assert!(values[0].is_inline());
+        assert_eq!(
+            hive.value_data(&values[0]).expect("data"),
+            vec![0xAAu8, 0xBB, 0xCC, 0xDD]
+        );
+    }
+
+    #[test]
     fn class_name_is_read_for_lsa_subkeys() {
         let spec = KeySpec::new("SYSTEM").child(
             KeySpec::new("Control").child(KeySpec::new("Lsa").child(
@@ -831,7 +854,7 @@ mod tests {
     fn bad_signature_is_reported() {
         let mut bytes = build_hive(&KeySpec::new("SYSTEM"));
         // 把根键签名破坏成非 nk
-        let root = 0x1000 + u32::from_le_bytes(bytes[0x34..0x38].try_into().unwrap()) as usize;
+        let root = 0x1000 + u32::from_le_bytes(bytes[0x24..0x28].try_into().unwrap()) as usize;
         bytes[root..root + 2].copy_from_slice(&0x1234u16.to_le_bytes());
         let error = Hive::open(bytes).expect_err("bad nk");
         assert!(matches!(error.stage, RegfStage::Signature | RegfStage::Cell));
