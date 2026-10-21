@@ -1,0 +1,18 @@
+# LPP v2 package manifest. Labels are the Chinese defaults; translations live
+# in locales/<locale>.toml under stable keys.
+id = "org.ljnljn.windows-usb-history"
+name = "Windows USB 设备历史"
+version = "0.1.0"
+protocol = 2
+library = "ljnljn_windows_usb_history"
+memory = "512MiB"
+permissions = []
+
+[[analyzer]]
+id = "usbstor"
+name = "USB 存储设备历史"
+scope = "system"
+platforms = ["windows"]
+trigger = "manual"
+category = "usb"
+inputs = ["Windows/System32/config/SYSTEM"]

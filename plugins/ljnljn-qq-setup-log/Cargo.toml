@@ -1,0 +1,46 @@
+[package]
+name = "ljnljn-qq-setup-timeline-d569c0d3"
+version = "0.1.0"
+edition = "2021"
+description = "LovelyCarve file_analyzer: 腾讯 QQ 安装日志 qq_setup.log 的 mmdd/hhmmss 时间片段与安装/完成/启动标记定位"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "ljnljn_kb_qq_setup_timeline_d569c0d3"
+
+[dependencies]
+# 真实 SDK crate `lovelycarve-plugin`（LPP v1 / C ABI v1）。来源为共享官方插件工作区
+# 快照 workspaces/_plugin-gen/_sdk，由主项目 carve-plugins/SDK-SOURCE.json 记录：
+#   LovelyTeams/LovelyCarve-Plugins @ 68d75aebf018ac43add391f2bc83528ca2ee85ae
+# 该 crate 的 Cargo.toml 使用 license.workspace = true，因此依赖指向完整工作区内的
+# sdk/ 子目录（父 Cargo.toml 提供 workspace 继承）。SDK 只读引用，未修改。
+# 绝对路径由面板/构建脚本按实际本机位置改写；改写时必须仍指向含
+# name = "lovelycarve-plugin" 的 Cargo.toml 所在目录。
+lovelycarve-plugin = { path = "../../sdk-v1/sdk" }
+
+# 只使用 Rust 标准库加 SDK 自身依赖（rmp-serde / rmpv / serde）。
+# GBK 解码需要码表，标准库不提供，因此引入编码库 encoding_rs（Apache-2.0/MIT），
+# 该 crate 在共享 SDK 工作区的 Cargo.lock 中未被使用，版本由本工程 Cargo.lock 固定。
+encoding_rs = "0.8"
+
+[profile.release]
+# 与官方插件工作区一致：panic 在 C ABI 边界转成 LPP 错误，需要 unwind。
+panic = "unwind"
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+
+[lints.rust]
+# MSVC link.exe 会为每个 DLL 报告生成的导入库。
+linker_messages = "allow"
+
+[lints.clippy]
+uninlined_format_args = "warn"
+
+# 本 crate 是独立工作区：不加入 carve-plugins 父工作区，避免影响其他插件。
+[workspace]
+
+[workspace.package]
+license = "AGPL-3.0-only"

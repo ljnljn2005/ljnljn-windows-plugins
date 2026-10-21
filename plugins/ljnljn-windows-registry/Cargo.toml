@@ -1,0 +1,26 @@
+[package]
+name = "ljnljn-sam-hive-hash-extract-da5e5db1"
+version = "0.1.0"
+edition = "2021"
+description = "Offline SAM/SYSTEM registry hive analyzer: bootkey derivation and NT/LM hash extraction (no cracking)"
+publish = false
+
+[lib]
+name = "ljnljn_kb_sam_hive_hash_extract_da5e5db1"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Shared official LovelyCarve plugin SDK crate (lovelycarve-plugin), verified at this path.
+lovelycarve-plugin = { path = "../../sdk-v1/sdk" }
+
+[lints.rust]
+# MSVC link.exe reports the import library it creates for every DLL.
+linker_messages = "allow"
+
+[lints.clippy]
+uninlined_format_args = "warn"
+
+[workspace]
+
+[workspace.package]
+license = "AGPL-3.0-only"

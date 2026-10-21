@@ -1,0 +1,27 @@
+id = "org.ljnljn.chromium-history"
+name = "Chromium 多配置历史统计"
+version = "0.1.0"
+protocol_min = 1
+protocol_max = 1
+permissions = ["emit_artifacts"]
+
+[library]
+path = "ljnljn_chromium_history"
+isolation = "process"
+
+[task]
+type = "analysis"
+platform = "windows"
+trigger = "manually"
+support = ["Chrome 与 Edge 历史访问统计"]
+
+[[capabilities]]
+type = "evidence_analyzer"
+analyzer = "ljnljn.chromium-history"
+display = "Chrome / Edge 多配置历史统计"
+
+[[capabilities]]
+type = "file_analyzer"
+analyzer = "ljnljn.chromium-history.file"
+mime_types = ["application/vnd.sqlite3", "application/x-sqlite3"]
+priority = 10

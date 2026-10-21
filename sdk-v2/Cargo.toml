@@ -1,0 +1,6 @@
+[workspace]
+resolver = "2"
+members = ["sdk", "sdk-derive"]
+
+[workspace.package]
+license = "AGPL-3.0-only"

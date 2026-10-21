@@ -1,0 +1,95 @@
+{
+  "protocol": 2,
+  "plugin": "org.ljnljn.windows-usb-history",
+  "sdk": "0.2.0",
+  "analyzers": [
+    "usbstor"
+  ],
+  "filesystems": [],
+  "records": [
+    {
+      "type": "profile.fact",
+      "label": "检材画像",
+      "title": "{key}",
+      "fields": [
+        {
+          "id": "key",
+          "label": "键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "value",
+          "label": "值",
+          "kind": "json"
+        },
+        {
+          "id": "system",
+          "label": "系统",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "type": "windows.usb.device",
+      "label": "USB 存储设备",
+      "title": "{device} / {instance}",
+      "fields": [
+        {
+          "id": "device",
+          "label": "设备键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "instance",
+          "label": "实例键",
+          "kind": "text",
+          "key": true
+        },
+        {
+          "id": "friendly_name",
+          "label": "设备名称",
+          "kind": "text"
+        },
+        {
+          "id": "device_desc",
+          "label": "设备描述",
+          "kind": "text"
+        },
+        {
+          "id": "service",
+          "label": "驱动服务",
+          "kind": "text"
+        },
+        {
+          "id": "container_id",
+          "label": "容器 ID",
+          "kind": "text"
+        },
+        {
+          "id": "hardware_id",
+          "label": "硬件 ID",
+          "kind": "text"
+        },
+        {
+          "id": "first_install",
+          "label": "首次安装",
+          "kind": "timestamp"
+        },
+        {
+          "id": "last_arrival",
+          "label": "最后接入",
+          "kind": "timestamp"
+        },
+        {
+          "id": "key_last_write",
+          "label": "注册表键最后写入",
+          "kind": "timestamp",
+          "timeline": "modified"
+        }
+      ]
+    }
+  ],
+  "schema_hash": "fnv1a64:4ef6df4fabc2c9b1"
+}

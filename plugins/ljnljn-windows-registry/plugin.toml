@@ -1,0 +1,55 @@
+id = "org.ljnljn.windows-registry"
+name = "Windows注册表取证"
+version = "0.1.0"
+protocol_min = 1
+protocol_max = 1
+permissions = ["emit_artifacts"]
+
+# ljnljn_kb_sam_hive_hash_extract_da5e5db1.dll built from this crate.
+# It parses untrusted hives, so it keeps the default isolation = "process".
+[library]
+path = "ljnljn_kb_sam_hive_hash_extract_da5e5db1"
+isolation = "process"
+
+[task]
+type = "baseinfo"
+platform = "windows"
+trigger = "manually"
+support = [
+  "注册表 hive 来源",
+  "bootkey 派生(JD/Skew1/GBG/Data)",
+  "账号与 RID",
+  "NT/LM 哈希提取",
+  "SOFTWARE 系统版本",
+  "Uninstall 安装项",
+  "SYSTEM USBSTOR 设备与实例",
+]
+
+[[capabilities]]
+type = "evidence_analyzer"
+analyzer = "ljnljn.windows-registry"
+display = "SAM账号哈希提取(SAM+SYSTEM hive)"
+
+[[capabilities]]
+type = "file_analyzer"
+analyzer = "ljnljn.windows-registry.software-version"
+extensions = ["hive", "dat"]
+priority = 10
+
+[[capabilities]]
+type = "file_analyzer"
+analyzer = "ljnljn.windows-registry.uninstall"
+extensions = ["hive", "dat"]
+priority = 10
+
+[[capabilities]]
+type = "file_analyzer"
+analyzer = "ljnljn.windows-registry.usbstor"
+extensions = ["hive", "dat"]
+priority = 10
+
+[[capabilities]]
+type = "file_analyzer"
+analyzer = "ljnljn.windows-registry.sam-policy"
+extensions = ["hive", "dat"]
+priority = 10

@@ -1,0 +1,27 @@
+id = "org.ljnljn.recyclebin"
+name = "Windows 回收站元数据"
+version = "0.1.0"
+protocol_min = 1
+protocol_max = 1
+permissions = ["emit_artifacts"]
+
+[library]
+path = "ljnljn_recyclebin"
+isolation = "process"
+
+[task]
+type = "analysis"
+platform = "windows"
+trigger = "manually"
+support = ["回收站文件名", "删除时间", "原始大小", "回收站内容配对"]
+
+[[capabilities]]
+type = "file_analyzer"
+analyzer = "ljnljn.recyclebin.file"
+display = "解析回收站 $I 文件"
+priority = 10
+
+[[capabilities]]
+type = "evidence_analyzer"
+analyzer = "ljnljn.recyclebin.evidence"
+display = "Windows 回收站记录"

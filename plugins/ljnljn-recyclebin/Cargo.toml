@@ -1,0 +1,18 @@
+[package]
+name = "ljnljn-recyclebin"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+
+[lib]
+name = "ljnljn_recyclebin"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+lovelycarve-plugin = { path = "../../sdk-v1/sdk" }
+time = { version = "0.3", features = ["formatting"] }
+
+[workspace]
+
+[workspace.package]
+license = "AGPL-3.0-only"

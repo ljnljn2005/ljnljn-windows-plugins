@@ -1,0 +1,27 @@
+id = "org.ljnljn.psreadline"
+name = "PowerShell历史URL"
+version = "0.1.0"
+protocol_min = 1
+protocol_max = 1
+permissions = ["emit_artifacts"]
+
+[library]
+path = "ljnljn_psreadline"
+isolation = "process"
+
+[task]
+type = "baseinfo"
+platform = "windows"
+trigger = "manually"
+support = ["PowerShell历史URL"]
+
+[[capabilities]]
+type = "evidence_analyzer"
+analyzer = "ljnljn.psreadline.urls"
+display = "PowerShell历史URL"
+
+[[capabilities]]
+type = "file_analyzer"
+analyzer = "ljnljn.psreadline.urls.file"
+extensions = ["txt"]
+priority = 10

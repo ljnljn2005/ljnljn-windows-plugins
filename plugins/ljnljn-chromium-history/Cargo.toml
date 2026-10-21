@@ -1,0 +1,20 @@
+[package]
+name = "ljnljn-chromium-history"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+publish = false
+
+[lib]
+name = "ljnljn_chromium_history"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+lovelycarve-plugin = { path = "../../sdk-v1/sdk" }
+rusqlite = { version = "0.32.1", features = ["bundled", "serialize", "hooks"] }
+time = { version = "0.3", features = ["formatting"] }
+
+[workspace]
+
+[workspace.package]
+license = "AGPL-3.0-only"

@@ -1,0 +1,28 @@
+[package]
+name = "ljnljn-windows-usb-history"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+description = "LovelyCarve LPP v2 analyzer: Windows USBSTOR device history from the SYSTEM hive"
+publish = false
+
+[lib]
+name = "ljnljn_windows_usb_history"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+lovelycarve-plugin = { path = "../../sdk-v2/sdk" }
+
+[dev-dependencies]
+lovelycarve-plugin = { path = "../../sdk-v2/sdk", features = ["testing"] }
+
+[lints.rust]
+linker_messages = "allow"
+
+[lints.clippy]
+uninlined_format_args = "warn"
+
+[workspace]
+
+[workspace.package]
+license = "AGPL-3.0-only"

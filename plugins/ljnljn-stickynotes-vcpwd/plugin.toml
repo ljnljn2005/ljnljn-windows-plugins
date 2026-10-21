@@ -1,0 +1,36 @@
+id = "org.ljnljn.stickynotes-vcpwd"
+name = "便笺 VCpwd 凭据提取"
+version = "0.1.0"
+protocol_min = 1
+protocol_max = 1
+permissions = ["emit_artifacts"]
+
+# ljnljn_kb_stickynotes_vcpwd_extract_dc952a12.dll，由本 crate 构建。
+# 解析不可信检材文本，保留 isolation = "process"（崩溃不带走主程序）。
+[library]
+path = "ljnljn_kb_stickynotes_vcpwd_extract_dc952a12"
+isolation = "process"
+
+# 单文件分析：手动触发；对火眼导出的便笺 data.csv（或与其同构的 CSV/TSV）
+# 在任意平台调用。不声明 auto，避免在不相关文件上自动运行。
+[task]
+type = "fileanalyzer"
+platform = "all"
+trigger = "manually"
+support = [
+  "编码识别：UTF-8(BOM/无BOM) / UTF-16LE+BOM / UTF-16BE+BOM / GBK / GB18030 回退",
+  "分隔符识别：逗号或制表符（按首逻辑记录字段数一致性判定）",
+  "标准 CSV 引号规则解析（双引号转义、跨行引号字段、CRLF/LF/CR 行尾）",
+  "逐行逐列键值抽取：键名 VCpwd（不区分大小写） + :/= /中文冒号",
+  "按值去重并统计出现次数，记录行号/列名或列序号/原始单元格文本（200 字符截断）",
+  "unparsedRowCount 与 limitations 明确记录编码替换、字段数不齐、超限等降级情况",
+]
+
+# 说明：本插件首版只做离线解析，不实现 VeraCrypt 解密挂载、不做密码正确性
+# 判定、不计卷内文件数；这些在结果 limitations 中逐项标注为未覆盖。
+
+[[capabilities]]
+type = "file_analyzer"
+analyzer = "ljnljn.stickynotes-vcpwd"
+extensions = ["csv", "tsv", "txt"]
+priority = 10
